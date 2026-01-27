@@ -63,7 +63,8 @@ export function useDiscovery() {
 
   /**
    * Record a swipe (like or pass)
-   * Returns { matched: true } if this creates a new match
+   * Returns { matched: true, matchId: UUID } if this creates a new match
+   * The match is created automatically by a database trigger on mutual likes
    */
   const swipe = useCallback(async (direction) => {
     if (!user || currentIndex >= profiles.length) {
@@ -73,7 +74,7 @@ export function useDiscovery() {
     const targetProfile = profiles[currentIndex];
 
     try {
-      // Record the swipe
+      // Record the swipe (match is created automatically by DB trigger if mutual)
       const { error: swipeError } = await supabase
         .from('swipes')
         .insert({
@@ -86,8 +87,10 @@ export function useDiscovery() {
 
       // Check if this creates a match (if we liked them)
       let matched = false;
+      let matchId = null;
+
       if (direction === 'like') {
-        // Check if they already liked us
+        // Check if they already liked us (mutual like = match)
         const { data: mutualLike } = await supabase
           .from('swipes')
           .select('id')
@@ -97,12 +100,28 @@ export function useDiscovery() {
           .single();
 
         matched = !!mutualLike;
+
+        // If matched, fetch the match ID (created by trigger)
+        if (matched) {
+          // Order user IDs to match the constraint in the matches table
+          const orderedUser1 = user.id < targetProfile.id ? user.id : targetProfile.id;
+          const orderedUser2 = user.id < targetProfile.id ? targetProfile.id : user.id;
+
+          const { data: matchData } = await supabase
+            .from('matches')
+            .select('id')
+            .eq('user1_id', orderedUser1)
+            .eq('user2_id', orderedUser2)
+            .single();
+
+          matchId = matchData?.id || null;
+        }
       }
 
       // Move to next profile
       setCurrentIndex(prev => prev + 1);
 
-      return { matched, profile: targetProfile };
+      return { matched, matchId, profile: targetProfile };
     } catch (err) {
       console.error('Error recording swipe:', err);
       return { error: err };

@@ -1,120 +1,143 @@
-# Mutual
+# Mutual - Modern Dating Web Application
 
-A modern dating web application where users can only chat with **one match at a time** — encouraging deeper, more intentional conversations.
-
-## Features
-
-- **User Authentication** — Email/password signup and login (OAuth-ready)
-- **Profile Management** — Name, age, gender, bio, interests, and up to 6 photos
-- **Swipe Discovery** — Like or pass on potential matches
-- **Mutual Matching** — Match created when two users like each other
-- **One Active Chat** — Users can only message one match at a time
-- **Real-time Messaging** — Instant chat with read receipts via Supabase Realtime
-- **Privacy by Default** — Row Level Security ensures users only see their own data
+A modern, mobile-first dating web application built with React, Tailwind CSS, and Supabase. Features real-time chat, swipe-based matching, and comprehensive privacy controls.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 18, Vite, Tailwind CSS |
-| Backend | Supabase (PostgreSQL, Auth, Realtime, Storage) |
-| Routing | React Router v6 |
+### Frontend
+- **React 18** - Functional components with hooks
+- **React Router v6** - Client-side routing
+- **Tailwind CSS 3.4** - Utility-first styling
+- **Vite 5** - Fast build tool and dev server
+
+### Backend (Supabase)
+- **PostgreSQL** - Database
+- **Supabase Auth** - Email/password + OAuth authentication
+- **Supabase Realtime** - Live chat and match notifications
+- **Supabase Storage** - Profile photo uploads
+- **Row Level Security (RLS)** - Data privacy and protection
+
+## Requirements
+
+- **Node.js**: >= 18.0.0
+- **npm**: >= 9.0.0 (or yarn/pnpm)
+- **Supabase Account**: Free tier works
 
 ## Project Structure
 
 ```
 mutual/
 ├── src/
-│   ├── components/
-│   │   ├── discovery/       # ProfileCard, MatchModal
-│   │   └── layout/          # Layout, BottomNav
-│   ├── contexts/
+│   ├── components/          # Reusable UI components
+│   │   ├── discovery/       # Swipe/discovery components
+│   │   │   ├── ProfileCard.jsx
+│   │   │   └── MatchModal.jsx
+│   │   └── layout/          # Layout components
+│   │       ├── Layout.jsx
+│   │       └── BottomNav.jsx
+│   ├── contexts/            # React contexts
 │   │   └── AuthContext.jsx  # Authentication state
-│   ├── hooks/
+│   ├── hooks/               # Custom React hooks
 │   │   ├── useChat.js       # Real-time chat logic
 │   │   ├── useDiscovery.js  # Swipe/discovery logic
 │   │   ├── useMatches.js    # Match management
-│   │   └── useProfile.js    # Profile CRUD
-│   ├── lib/
-│   │   └── supabase.js      # Supabase client
-│   ├── pages/
-│   │   ├── Chat.jsx         # 1-to-1 messaging
+│   │   └── useProfile.js    # Profile operations
+│   ├── lib/                 # Utilities and clients
+│   │   └── supabase.js      # Supabase client setup
+│   ├── pages/               # Page components
+│   │   ├── Chat.jsx         # 1-to-1 chat
 │   │   ├── Discover.jsx     # Swipe interface
-│   │   ├── Login.jsx        # Sign in
-│   │   ├── Matches.jsx      # Match list
-│   │   ├── Profile.jsx      # Edit profile
-│   │   └── SignUp.jsx       # Create account
-│   ├── App.jsx              # Routes & auth guards
-│   ├── index.css            # Tailwind + custom styles
-│   └── main.jsx             # Entry point
+│   │   ├── Login.jsx        # Login page
+│   │   ├── Matches.jsx      # Matches list
+│   │   ├── Profile.jsx      # Profile editor
+│   │   └── SignUp.jsx       # Registration
+│   ├── App.jsx              # Main app with routing
+│   ├── main.jsx             # Entry point
+│   └── index.css            # Global styles
 ├── supabase/
 │   └── schema.sql           # Database schema + RLS policies
+├── .env.example             # Environment variables template
 ├── package.json
 ├── tailwind.config.js
 ├── vite.config.js
 └── README.md
 ```
 
-## Prerequisites
-
-- **Node.js** >= 18.0.0
-- **npm** or **yarn**
-- **Supabase account** (free tier works)
-
-## Setup Instructions
+## Quick Start
 
 ### 1. Clone and Install
 
 ```bash
+git clone <repository-url>
 cd mutual
 npm install
 ```
 
-### 2. Create Supabase Project
+### 2. Set Up Supabase
 
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Wait for the database to be provisioned
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to **SQL Editor** and run the contents of `supabase/schema.sql`
+3. Go to **Settings > API** and copy your project URL and anon key
 
-### 3. Run Database Schema
+### 3. Configure Environment
 
-1. Open your Supabase project dashboard
-2. Go to **SQL Editor**
-3. Copy the contents of `supabase/schema.sql`
-4. Run the SQL to create tables, indexes, RLS policies, and triggers
+```bash
+cp .env.example .env
+```
 
-### 4. Create Storage Bucket
-
-1. Go to **Storage** in your Supabase dashboard
-2. Create a new bucket called `avatars`
-3. Set it to **Public**
-4. Add the storage policies (see comments at bottom of `schema.sql`)
-
-### 5. Configure Environment Variables
-
-Create a `.env` file in the project root:
+Edit `.env` with your Supabase credentials:
 
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
-Find these values in your Supabase project: **Settings → API**
-
-### 6. (Optional) Enable OAuth
-
-To enable Google sign-in:
-
-1. Go to **Authentication → Providers** in Supabase
-2. Enable Google and add your OAuth credentials
-3. Set the redirect URL to `http://localhost:3000/discover`
-
-### 7. Run Development Server
+### 4. Run Development Server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:5173](http://localhost:5173)
+
+## Features
+
+### Authentication
+- Email/password signup and login
+- OAuth ready (Google, etc.)
+- Automatic profile creation on signup
+- Protected routes
+
+### Profile Management
+- Name, age, gender, bio
+- Up to 6 profile photos
+- Interest tags (up to 10)
+- Photo upload to Supabase Storage
+
+### Discovery / Swiping
+- Browse potential matches
+- Like or pass on profiles
+- Photo carousel navigation
+- Swipe animations
+- Automatic match detection
+
+### Matching
+- Mutual likes create matches
+- Match notifications
+- Match status tracking (pending, active, ended)
+
+### Real-Time Chat
+- 1-to-1 messaging between matches
+- Real-time message delivery
+- Read receipts
+- Message history
+- Typing indicators ready
+
+### Privacy & Security
+- Row Level Security on all tables
+- Users can only see their own data
+- Messages only visible to match participants
+- Secure file uploads to user folders
 
 ## Database Schema
 
@@ -123,83 +146,246 @@ Open [http://localhost:3000](http://localhost:3000)
 | Table | Description |
 |-------|-------------|
 | `profiles` | User profile data (linked to auth.users) |
-| `swipes` | Records of likes/passes |
-| `matches` | Mutual likes between two users |
-| `messages` | Chat messages within matches |
+| `swipes` | Like/pass records between users |
+| `matches` | Mutual likes (created automatically) |
+| `messages` | Chat messages between matched users |
 
-### Key Constraints
+### Key Relationships
 
-- **One active chat**: `profiles.active_match_id` tracks the user's current conversation
-- **Match uniqueness**: `user1_id < user2_id` constraint prevents duplicate matches
-- **Swipe uniqueness**: Users can only swipe once per person
-
-### Row Level Security
-
-All tables have RLS enabled:
-
-- Users can only read/write their own profile
-- Users can only see matches they're part of
-- Messages are only visible within user's matches
-- Swipes are private to the swiper
+```
+auth.users (1) ──── (1) profiles
+profiles (1) ──── (*) swipes (as swiper)
+profiles (1) ──── (*) swipes (as swiped)
+profiles (1) ──── (*) matches (as user1 or user2)
+matches (1) ──── (*) messages
+```
 
 ## API Examples
 
-### Supabase Client Usage
+### Supabase Client Setup
 
 ```javascript
-import { supabase } from './lib/supabase';
+// src/lib/supabase.js
+import { createClient } from '@supabase/supabase-js';
 
-// Fetch user profile
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+```
+
+### Authentication
+
+```javascript
+// Sign up
+const { data, error } = await supabase.auth.signUp({
+  email: 'user@example.com',
+  password: 'password123',
+});
+
+// Sign in
+const { data, error } = await supabase.auth.signInWithPassword({
+  email: 'user@example.com',
+  password: 'password123',
+});
+
+// Sign out
+await supabase.auth.signOut();
+
+// Get current user
+const { data: { user } } = await supabase.auth.getUser();
+```
+
+### Profile Operations
+
+```javascript
+// Get profile
 const { data: profile } = await supabase
   .from('profiles')
   .select('*')
   .eq('id', userId)
   .single();
 
-// Record a swipe
-await supabase.from('swipes').insert({
-  swiper_id: currentUserId,
-  swiped_id: targetUserId,
-  direction: 'like', // or 'pass'
-});
+// Update profile
+const { data, error } = await supabase
+  .from('profiles')
+  .update({ name: 'New Name', bio: 'Updated bio' })
+  .eq('id', userId);
 
-// Send a message
-await supabase.from('messages').insert({
-  match_id: matchId,
-  sender_id: currentUserId,
-  content: 'Hello!',
-});
-
-// Subscribe to new messages (real-time)
-supabase
-  .channel(`messages:${matchId}`)
-  .on('postgres_changes', {
-    event: 'INSERT',
-    schema: 'public',
-    table: 'messages',
-    filter: `match_id=eq.${matchId}`,
-  }, (payload) => {
-    console.log('New message:', payload.new);
-  })
-  .subscribe();
+// Upload photo
+const { error } = await supabase.storage
+  .from('avatars')
+  .upload(`${userId}/${filename}`, file);
 ```
+
+### Discovery / Swiping
+
+```javascript
+// Get profiles to swipe on (excluding already swiped)
+const { data: swipedIds } = await supabase
+  .from('swipes')
+  .select('swiped_id')
+  .eq('swiper_id', userId);
+
+const { data: profiles } = await supabase
+  .from('profiles')
+  .select('*')
+  .not('id', 'in', `(${[userId, ...swipedIds].join(',')})`)
+  .not('name', 'is', null)
+  .limit(20);
+
+// Record a swipe (match created automatically by trigger)
+const { error } = await supabase
+  .from('swipes')
+  .insert({
+    swiper_id: userId,
+    swiped_id: targetUserId,
+    direction: 'like', // or 'pass'
+  });
+```
+
+### Matches
+
+```javascript
+// Get user's matches
+const { data: matches } = await supabase
+  .from('matches')
+  .select('*')
+  .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+  .order('updated_at', { ascending: false });
+
+// Update match status
+await supabase
+  .from('matches')
+  .update({ status: 'active' })
+  .eq('id', matchId);
+```
+
+### Real-Time Chat
+
+```javascript
+// Send message
+const { data, error } = await supabase
+  .from('messages')
+  .insert({
+    match_id: matchId,
+    sender_id: userId,
+    content: 'Hello!',
+  });
+
+// Subscribe to new messages
+const subscription = supabase
+  .channel(`messages:${matchId}`)
+  .on(
+    'postgres_changes',
+    {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'messages',
+      filter: `match_id=eq.${matchId}`,
+    },
+    (payload) => {
+      console.log('New message:', payload.new);
+    }
+  )
+  .subscribe();
+
+// Mark messages as read
+await supabase
+  .from('messages')
+  .update({ read_at: new Date().toISOString() })
+  .eq('match_id', matchId)
+  .neq('sender_id', userId)
+  .is('read_at', null);
+```
+
+## RLS Policies Summary
+
+| Table | SELECT | INSERT | UPDATE | DELETE |
+|-------|--------|--------|--------|--------|
+| profiles | All authenticated | Own only | Own only | Own only |
+| swipes | Own swipes | As swiper | None | None |
+| matches | Participant only | Participant | Participant | None |
+| messages | Match participant | Match participant | Match participant | None |
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-| `npm run lint` | Run ESLint |
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run preview  # Preview production build
+npm run lint     # Run ESLint
+```
 
-## Production Deployment
+## OAuth Setup (Optional)
 
-1. Build the app: `npm run build`
-2. Deploy the `dist/` folder to any static host (Vercel, Netlify, etc.)
-3. Set environment variables on your hosting platform
-4. Update Supabase Auth redirect URLs for your production domain
+### Google OAuth
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project or select existing
+3. Enable Google+ API
+4. Create OAuth 2.0 credentials
+5. Add authorized redirect URI:
+   ```
+   https://your-project-id.supabase.co/auth/v1/callback
+   ```
+6. In Supabase Dashboard:
+   - Go to Authentication > Providers > Google
+   - Enable and add your Client ID and Secret
+
+## Deployment
+
+### Vercel (Recommended)
+
+```bash
+npm install -g vercel
+vercel
+```
+
+### Netlify
+
+```bash
+npm run build
+# Deploy dist/ folder
+```
+
+### Environment Variables
+
+Set these in your deployment platform:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+## Troubleshooting
+
+### "Missing Supabase environment variables"
+- Ensure `.env` file exists with correct values
+- Restart the dev server after changing `.env`
+
+### "You are not part of this match"
+- RLS policy is working correctly
+- User is trying to access a match they're not part of
+
+### Photos not uploading
+- Check Supabase Storage bucket exists (`avatars`)
+- Verify storage policies are applied
+- Check file size (max 5MB enforced in code)
+
+### Real-time not working
+- Ensure tables are added to `supabase_realtime` publication
+- Check browser console for WebSocket errors
+- Verify Supabase project has Realtime enabled
 
 ## License
 
 MIT
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+---
+
+Built with React, Tailwind CSS, and Supabase

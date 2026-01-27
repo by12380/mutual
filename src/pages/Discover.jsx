@@ -12,8 +12,8 @@ export default function Discover() {
     const result = await like();
     if (result.matched) {
       setMatchedProfile(result.profile);
-      // Note: matchId would come from the swipe result if we modify the hook
-      // For now, user can navigate to matches to see the new match
+      // matchId is now returned from the swipe result (created by DB trigger)
+      setMatchId(result.matchId);
     }
   };
 
