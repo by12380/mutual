@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getInterestName } from '../../lib/interests';
 
 /**
  * Profile card component for the discovery/swipe view
@@ -115,12 +116,12 @@ export default function ProfileCard({ profile, onLike, onPass }) {
         {/* Interests */}
         {profile.interests?.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-4">
-            {profile.interests.slice(0, 5).map(interest => (
+            {profile.interests.slice(0, 5).map(interestId => (
               <span
-                key={interest}
+                key={interestId}
                 className="px-2 py-0.5 bg-primary-50 text-primary-600 rounded-full text-xs font-medium"
               >
-                {interest}
+                {getInterestName(interestId)}
               </span>
             ))}
             {profile.interests.length > 5 && (

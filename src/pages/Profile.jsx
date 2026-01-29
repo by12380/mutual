@@ -1,18 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
+import { INTERESTS } from '../lib/interests';
 
 const GENDER_OPTIONS = [
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },
   { value: 'non-binary', label: 'Non-binary' },
   { value: 'other', label: 'Other' },
-];
-
-const INTEREST_SUGGESTIONS = [
-  'Travel', 'Music', 'Movies', 'Fitness', 'Cooking', 'Reading',
-  'Gaming', 'Photography', 'Art', 'Sports', 'Hiking', 'Dancing',
-  'Coffee', 'Wine', 'Dogs', 'Cats', 'Yoga', 'Meditation',
 ];
 
 export default function Profile() {
@@ -108,11 +103,11 @@ export default function Profile() {
     setPhotos(photos.filter(p => p !== photoUrl));
   };
 
-  const toggleInterest = (interest) => {
-    if (interests.includes(interest)) {
-      setInterests(interests.filter(i => i !== interest));
+  const toggleInterest = (interestId) => {
+    if (interests.includes(interestId)) {
+      setInterests(interests.filter(id => id !== interestId));
     } else if (interests.length < 10) {
-      setInterests([...interests, interest]);
+      setInterests([...interests, interestId]);
     }
   };
 
@@ -241,17 +236,17 @@ export default function Profile() {
           <h2 className="text-lg font-semibold mb-3">Interests</h2>
           <p className="text-sm text-gray-500 mb-3">Select up to 10 interests</p>
           <div className="flex flex-wrap gap-2">
-            {INTEREST_SUGGESTIONS.map(interest => (
+            {INTERESTS.map(interest => (
               <button
-                key={interest}
-                onClick={() => toggleInterest(interest)}
+                key={interest.id}
+                onClick={() => toggleInterest(interest.id)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  interests.includes(interest)
+                  interests.includes(interest.id)
                     ? 'bg-primary-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {interest}
+                {interest.name}
               </button>
             ))}
           </div>
