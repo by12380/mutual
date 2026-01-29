@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   // Fetch user profile from database
-  const fetchProfile = async (userId) => {
+  const fetchProfile = async (userId, userEmail = null) => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -26,6 +26,22 @@ export function AuthProvider({ children }) {
       .single();
 
     if (error) {
+      // PGRST116 means no rows found - profile doesn't exist yet
+      if (error.code === 'PGRST116') {
+        console.log('Profile not found, creating one...');
+        // Create the profile if it doesn't exist
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({ id: userId, email: userEmail })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          return null;
+        }
+        return newProfile;
+      }
       console.error('Error fetching profile:', error);
       return null;
     }
@@ -44,7 +60,7 @@ export function AuthProvider({ children }) {
         if (session?.user) {
           setUser(session.user);
           // Fetch profile in the background, don't block auth state
-          fetchProfile(session.user.id).then((userProfile) => {
+          fetchProfile(session.user.id, session.user.email).then((userProfile) => {
             if (isMounted) setProfile(userProfile);
           });
         } else {
@@ -67,7 +83,7 @@ export function AuthProvider({ children }) {
         if (isMounted) {
           if (session?.user) {
             setUser(session.user);
-            const userProfile = await fetchProfile(session.user.id);
+            const userProfile = await fetchProfile(session.user.id, session.user.email);
             if (isMounted) setProfile(userProfile);
           }
           setLoading(false);
@@ -130,7 +146,7 @@ export function AuthProvider({ children }) {
   // Refresh profile data
   const refreshProfile = async () => {
     if (user) {
-      const userProfile = await fetchProfile(user.id);
+      const userProfile = await fetchProfile(user.id, user.email);
       setProfile(userProfile);
       return userProfile;
     }

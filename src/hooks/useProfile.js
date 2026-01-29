@@ -79,12 +79,13 @@ export function useProfile() {
     if (!user) return { error: new Error('Not authenticated') };
 
     // First get current photos
-    const { data: profile } = await supabase
+    const { data: profile, error: fetchError } = await supabase
       .from('profiles')
       .select('photos')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
+    // If profile doesn't exist, start with empty photos array
     const currentPhotos = profile?.photos || [];
     
     // Add new photo (max 6 photos)
@@ -106,7 +107,7 @@ export function useProfile() {
       .from('profiles')
       .select('photos')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     const currentPhotos = profile?.photos || [];
     const newPhotos = currentPhotos.filter(p => p !== photoUrl);
