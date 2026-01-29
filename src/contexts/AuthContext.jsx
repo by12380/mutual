@@ -34,28 +34,19 @@ export function AuthProvider({ children }) {
 
   // Initialize auth state
   useEffect(() => {
-    // Get initial session
-    const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        setUser(session.user);
-        const userProfile = await fetchProfile(session.user.id);
-        setProfile(userProfile);
-      }
-      
-      setLoading(false);
-    };
+    let isMounted = true;
 
-    initAuth();
-
-    // Listen for auth changes
+    // Listen for auth changes - set up FIRST to catch any auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!isMounted) return;
+        
         if (session?.user) {
           setUser(session.user);
-          const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
+          // Fetch profile in the background, don't block auth state
+          fetchProfile(session.user.id).then((userProfile) => {
+            if (isMounted) setProfile(userProfile);
+          });
         } else {
           setUser(null);
           setProfile(null);
@@ -64,7 +55,37 @@ export function AuthProvider({ children }) {
       }
     );
 
-    return () => subscription.unsubscribe();
+    // Get initial session
+    const initAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+        }
+        
+        if (isMounted) {
+          if (session?.user) {
+            setUser(session.user);
+            const userProfile = await fetchProfile(session.user.id);
+            if (isMounted) setProfile(userProfile);
+          }
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Error initializing auth:', err);
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initAuth();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Sign up with email and password
