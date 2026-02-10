@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import LocationPicker from '../components/LocationPicker';
 
 export default function SignUp() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [location, setLocation] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleNextStep = (e) => {
     e.preventDefault();
     setError('');
 
@@ -28,9 +31,22 @@ export default function SignUp() {
       return;
     }
 
+    setStep(2);
+  };
+
+  const handleSubmit = async () => {
+    setError('');
     setLoading(true);
 
-    const { data, error } = await signUp(email, password);
+    // Build user metadata with location
+    const metadata = {};
+    if (location) {
+      metadata.location = location.name;
+      metadata.location_lat = location.lat;
+      metadata.location_lng = location.lng;
+    }
+
+    const { data, error } = await signUp(email, password, metadata);
     
     if (error) {
       setError(error.message);
@@ -74,7 +90,7 @@ export default function SignUp() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-400 to-primary-600 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-400 to-primary-600 px-4 py-8">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -84,7 +100,14 @@ export default function SignUp() {
 
         {/* Sign Up Card */}
         <div className="card p-8">
-          <h2 className="text-2xl font-semibold text-center mb-6">Create account</h2>
+          <h2 className="text-2xl font-semibold text-center mb-2">Create account</h2>
+
+          {/* Step Indicator */}
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <div className={`w-2 h-2 rounded-full transition-colors ${step >= 1 ? 'bg-primary-500' : 'bg-gray-300'}`} />
+            <div className={`w-8 h-0.5 ${step >= 2 ? 'bg-primary-500' : 'bg-gray-300'}`} />
+            <div className={`w-2 h-2 rounded-full transition-colors ${step >= 2 ? 'bg-primary-500' : 'bg-gray-300'}`} />
+          </div>
 
           {error && (
             <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm">
@@ -92,60 +115,110 @@ export default function SignUp() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-field"
-                placeholder="you@example.com"
-                required
-              />
-            </div>
+          {/* Step 1: Email & Password */}
+          {step === 1 && (
+            <form onSubmit={handleNextStep} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input-field"
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-field"
-                placeholder="••••••••"
-                required
-              />
-            </div>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input-field"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="input-field"
-                placeholder="••••••••"
-                required
-              />
-            </div>
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="input-field"
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full py-3"
-            >
-              {loading ? 'Creating account...' : 'Create account'}
-            </button>
-          </form>
+              <button
+                type="submit"
+                className="btn-primary w-full py-3"
+              >
+                Next
+              </button>
+            </form>
+          )}
+
+          {/* Step 2: Location */}
+          {step === 2 && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Your Location
+                </label>
+                <p className="text-xs text-gray-500 mb-3">
+                  Set your location to find people nearby. You can change this later.
+                </p>
+                <LocationPicker
+                  value={location}
+                  onChange={setLocation}
+                  compact
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="btn-primary flex-1 py-3"
+                >
+                  {loading ? 'Creating account...' : 'Create account'}
+                </button>
+              </div>
+
+              {!location && (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="w-full text-sm text-gray-500 hover:text-gray-700 py-1"
+                >
+                  Skip for now
+                </button>
+              )}
+            </div>
+          )}
 
           <p className="text-center text-sm text-gray-600 mt-6">
             Already have an account?{' '}

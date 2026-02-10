@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   interests TEXT[] DEFAULT '{}',
   photos TEXT[] DEFAULT '{}',
   location TEXT,
+  location_lat DOUBLE PRECISION,
+  location_lng DOUBLE PRECISION,
   -- active_match_id enforces the "one conversation at a time" rule
   active_match_id UUID,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -132,8 +134,14 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email)
-  VALUES (NEW.id, NEW.email);
+  INSERT INTO public.profiles (id, email, location, location_lat, location_lng)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data->>'location',
+    (NEW.raw_user_meta_data->>'location_lat')::DOUBLE PRECISION,
+    (NEW.raw_user_meta_data->>'location_lng')::DOUBLE PRECISION
+  );
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

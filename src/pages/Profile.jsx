@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
 import { INTERESTS } from '../lib/interests';
+import LocationPicker from '../components/LocationPicker';
 
 const GENDER_OPTIONS = [
   { value: 'male', label: 'Male' },
@@ -20,6 +21,7 @@ export default function Profile() {
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
   const [bio, setBio] = useState('');
+  const [location, setLocation] = useState(null);
   const [interests, setInterests] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -34,6 +36,15 @@ export default function Profile() {
       setBio(profile.bio || '');
       setInterests(profile.interests || []);
       setPhotos(profile.photos || []);
+      if (profile.location) {
+        setLocation({
+          name: profile.location,
+          lat: profile.location_lat || null,
+          lng: profile.location_lng || null,
+        });
+      } else {
+        setLocation(null);
+      }
     }
   }, [profile]);
 
@@ -47,6 +58,9 @@ export default function Profile() {
       gender: gender || null,
       bio: bio.trim(),
       interests,
+      location: location?.name || null,
+      location_lat: location?.lat || null,
+      location_lng: location?.lng || null,
     };
 
     const { error } = await updateProfile(updates);
@@ -229,6 +243,16 @@ export default function Profile() {
             />
             <p className="text-xs text-gray-500 mt-1">{bio.length}/500</p>
           </div>
+        </section>
+
+        {/* Location */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Location</h2>
+          <p className="text-sm text-gray-500 mb-3">Set your location to find people nearby</p>
+          <LocationPicker
+            value={location}
+            onChange={setLocation}
+          />
         </section>
 
         {/* Interests */}

@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   // Fetch user profile from database
-  const fetchProfile = async (userId, userEmail = null) => {
+  const fetchProfile = async (userId, userEmail = null, userMetadata = null) => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -29,10 +29,17 @@ export function AuthProvider({ children }) {
       // PGRST116 means no rows found - profile doesn't exist yet
       if (error.code === 'PGRST116') {
         console.log('Profile not found, creating one...');
+        // Build profile with location from user metadata if available
+        const profileData = { id: userId, email: userEmail };
+        if (userMetadata?.location) {
+          profileData.location = userMetadata.location;
+          profileData.location_lat = userMetadata.location_lat || null;
+          profileData.location_lng = userMetadata.location_lng || null;
+        }
         // Create the profile if it doesn't exist
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
-          .insert({ id: userId, email: userEmail })
+          .insert(profileData)
           .select()
           .single();
 
@@ -60,7 +67,7 @@ export function AuthProvider({ children }) {
         if (session?.user) {
           setUser(session.user);
           // Fetch profile in the background, don't block auth state
-          fetchProfile(session.user.id, session.user.email).then((userProfile) => {
+          fetchProfile(session.user.id, session.user.email, session.user.user_metadata).then((userProfile) => {
             if (isMounted) setProfile(userProfile);
           });
         } else {
@@ -83,7 +90,7 @@ export function AuthProvider({ children }) {
         if (isMounted) {
           if (session?.user) {
             setUser(session.user);
-            const userProfile = await fetchProfile(session.user.id, session.user.email);
+            const userProfile = await fetchProfile(session.user.id, session.user.email, session.user.user_metadata);
             if (isMounted) setProfile(userProfile);
           }
           setLoading(false);
@@ -105,10 +112,13 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Sign up with email and password
-  const signUp = async (email, password) => {
+  const signUp = async (email, password, metadata = {}) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: metadata,
+      },
     });
     return { data, error };
   };
