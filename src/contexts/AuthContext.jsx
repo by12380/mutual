@@ -113,6 +113,11 @@ export function AuthProvider({ children }) {
 
   // Sign up with email and password
   const signUp = async (email, password, metadata = {}) => {
+    // Validate location is provided
+    if (!metadata.location || !metadata.location_lat || !metadata.location_lng) {
+      return { data: null, error: { message: 'Location is required to create an account' } };
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,

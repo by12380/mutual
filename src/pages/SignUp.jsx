@@ -36,15 +36,21 @@ export default function SignUp() {
 
   const handleSubmit = async () => {
     setError('');
+
+    // Validate location is provided
+    if (!location || !location.name || !location.lat || !location.lng) {
+      setError('Please select your location to continue');
+      return;
+    }
+
     setLoading(true);
 
     // Build user metadata with location
-    const metadata = {};
-    if (location) {
-      metadata.location = location.name;
-      metadata.location_lat = location.lat;
-      metadata.location_lng = location.lng;
-    }
+    const metadata = {
+      location: location.name,
+      location_lat: location.lat,
+      location_lng: location.lng,
+    };
 
     const { data, error } = await signUp(email, password, metadata);
     
@@ -177,10 +183,10 @@ export default function SignUp() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Your Location
+                  Your Location <span className="text-red-500">*</span>
                 </label>
                 <p className="text-xs text-gray-500 mb-3">
-                  Set your location to find people nearby. You can change this later.
+                  Your location is required to find people nearby. You can change it later.
                 </p>
                 <LocationPicker
                   value={location}
@@ -200,23 +206,12 @@ export default function SignUp() {
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={loading}
-                  className="btn-primary flex-1 py-3"
+                  disabled={loading || !location}
+                  className="btn-primary flex-1 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Creating account...' : 'Create account'}
                 </button>
               </div>
-
-              {!location && (
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  className="w-full text-sm text-gray-500 hover:text-gray-700 py-1"
-                >
-                  Skip for now
-                </button>
-              )}
             </div>
           )}
 
