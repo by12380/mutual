@@ -11,6 +11,31 @@ const GENDER_OPTIONS = [
   { value: 'other', label: 'Other' },
 ];
 
+const RELIGION_OPTIONS = [
+  'Christianity',
+  'Islam',
+  'Judaism',
+  'Hinduism',
+  'Buddhism',
+  'Sikhism',
+  'Spiritual',
+  'Agnostic',
+  'Atheist',
+  'Other',
+  'Prefer not to say',
+];
+
+const POLITICAL_OPTIONS = [
+  'Liberal',
+  'Conservative',
+  'Moderate',
+  'Libertarian',
+  'Progressive',
+  'Apolitical',
+  'Other',
+  'Prefer not to say',
+];
+
 export default function Profile() {
   const { profile, signOut } = useAuth();
   const { updateProfile, uploadPhoto, addPhoto, removePhoto, loading } = useProfile();
@@ -24,6 +49,12 @@ export default function Profile() {
   const [location, setLocation] = useState(null);
   const [interests, setInterests] = useState([]);
   const [photos, setPhotos] = useState([]);
+  const [height, setHeight] = useState({ feet: '', inches: '' });
+  const [heightVisible, setHeightVisible] = useState(true);
+  const [religion, setReligion] = useState('');
+  const [religionVisible, setReligionVisible] = useState(true);
+  const [politicalBeliefs, setPoliticalBeliefs] = useState('');
+  const [politicalBeliefsVisible, setPoliticalBeliefsVisible] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -36,6 +67,15 @@ export default function Profile() {
       setBio(profile.bio || '');
       setInterests(profile.interests || []);
       setPhotos(profile.photos || []);
+      setHeight({
+        feet: profile.height_feet?.toString() || '',
+        inches: profile.height_inches?.toString() || '',
+      });
+      setHeightVisible(profile.height_visible !== false);
+      setReligion(profile.religion || '');
+      setReligionVisible(profile.religion_visible !== false);
+      setPoliticalBeliefs(profile.political_beliefs || '');
+      setPoliticalBeliefsVisible(profile.political_beliefs_visible !== false);
       if (profile.location) {
         setLocation({
           name: profile.location,
@@ -61,6 +101,13 @@ export default function Profile() {
       location: location?.name || null,
       location_lat: location?.lat || null,
       location_lng: location?.lng || null,
+      height_feet: height.feet ? parseInt(height.feet, 10) : null,
+      height_inches: height.feet ? (height.inches ? parseInt(height.inches, 10) : 0) : null,
+      height_visible: heightVisible,
+      religion: religion || null,
+      religion_visible: religionVisible,
+      political_beliefs: politicalBeliefs || null,
+      political_beliefs_visible: politicalBeliefsVisible,
     };
 
     const { error } = await updateProfile(updates);
@@ -243,6 +290,98 @@ export default function Profile() {
             />
             <p className="text-xs text-gray-500 mt-1">{bio.length}/500</p>
           </div>
+        </section>
+
+        {/* Height */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Height</h2>
+          <div className="flex gap-3 mb-3">
+            <div className="flex-1">
+              <label htmlFor="feet" className="block text-xs text-gray-500 mb-1">Feet</label>
+              <select
+                id="feet"
+                value={height.feet}
+                onChange={(e) => setHeight({ ...height, feet: e.target.value })}
+                className="input-field"
+              >
+                <option value="">—</option>
+                {[3, 4, 5, 6, 7].map((ft) => (
+                  <option key={ft} value={ft}>{ft}'</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label htmlFor="inches" className="block text-xs text-gray-500 mb-1">Inches</label>
+              <select
+                id="inches"
+                value={height.inches}
+                onChange={(e) => setHeight({ ...height, inches: e.target.value })}
+                className="input-field"
+              >
+                <option value="">—</option>
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i} value={i}>{i}"</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={heightVisible}
+              onChange={(e) => setHeightVisible(e.target.checked)}
+              className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+            />
+            <span className="text-sm text-gray-600">Show height on my profile</span>
+          </label>
+        </section>
+
+        {/* Religion */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Religion</h2>
+          <select
+            value={religion}
+            onChange={(e) => setReligion(e.target.value)}
+            className="input-field mb-3"
+          >
+            <option value="">Select religion</option>
+            {RELIGION_OPTIONS.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={religionVisible}
+              onChange={(e) => setReligionVisible(e.target.checked)}
+              className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+            />
+            <span className="text-sm text-gray-600">Show religion on my profile</span>
+          </label>
+        </section>
+
+        {/* Political Beliefs */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Political Beliefs</h2>
+          <select
+            value={politicalBeliefs}
+            onChange={(e) => setPoliticalBeliefs(e.target.value)}
+            className="input-field mb-3"
+          >
+            <option value="">Select political leaning</option>
+            {POLITICAL_OPTIONS.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={politicalBeliefsVisible}
+              onChange={(e) => setPoliticalBeliefsVisible(e.target.checked)}
+              className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+            />
+            <span className="text-sm text-gray-600">Show political beliefs on my profile</span>
+          </label>
         </section>
 
         {/* Location */}

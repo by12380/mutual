@@ -108,6 +108,34 @@ export default function ProfileCard({ profile, onLike, onPass }) {
 
       {/* Info Section */}
       <div className="p-4">
+        {/* Details (Height, Religion, Political Beliefs) */}
+        {(
+          (profile.height_feet && profile.height_visible !== false) ||
+          (profile.religion && profile.religion_visible !== false) ||
+          (profile.political_beliefs && profile.political_beliefs_visible !== false)
+        ) && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {profile.height_feet && profile.height_visible !== false && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7l4-4m0 0l4 4m-4-4v18" />
+                </svg>
+                {profile.height_feet}'{profile.height_inches || 0}"
+              </span>
+            )}
+            {profile.religion && profile.religion_visible !== false && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                {profile.religion}
+              </span>
+            )}
+            {profile.political_beliefs && profile.political_beliefs_visible !== false && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                {profile.political_beliefs}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Bio */}
         {profile.bio && (
           <p className="text-gray-700 text-sm mb-3 line-clamp-3">{profile.bio}</p>
