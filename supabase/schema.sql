@@ -30,6 +30,15 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   location TEXT,
   location_lat DOUBLE PRECISION,
   location_lng DOUBLE PRECISION,
+  -- Height fields
+  height_feet INTEGER,
+  height_inches INTEGER DEFAULT 0,
+  height_visible BOOLEAN DEFAULT TRUE,
+  -- Religion & political beliefs
+  religion TEXT,
+  religion_visible BOOLEAN DEFAULT TRUE,
+  political_beliefs TEXT,
+  political_beliefs_visible BOOLEAN DEFAULT TRUE,
   -- active_match_id enforces the "one conversation at a time" rule
   active_match_id UUID,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -134,13 +143,25 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, location, location_lat, location_lng)
+  INSERT INTO public.profiles (
+    id, email, location, location_lat, location_lng,
+    height_feet, height_inches, height_visible,
+    religion, religion_visible,
+    political_beliefs, political_beliefs_visible
+  )
   VALUES (
     NEW.id,
     NEW.email,
     NEW.raw_user_meta_data->>'location',
     (NEW.raw_user_meta_data->>'location_lat')::DOUBLE PRECISION,
-    (NEW.raw_user_meta_data->>'location_lng')::DOUBLE PRECISION
+    (NEW.raw_user_meta_data->>'location_lng')::DOUBLE PRECISION,
+    (NEW.raw_user_meta_data->>'height_feet')::INTEGER,
+    COALESCE((NEW.raw_user_meta_data->>'height_inches')::INTEGER, 0),
+    COALESCE((NEW.raw_user_meta_data->>'height_visible')::BOOLEAN, TRUE),
+    NEW.raw_user_meta_data->>'religion',
+    COALESCE((NEW.raw_user_meta_data->>'religion_visible')::BOOLEAN, TRUE),
+    NEW.raw_user_meta_data->>'political_beliefs',
+    COALESCE((NEW.raw_user_meta_data->>'political_beliefs_visible')::BOOLEAN, TRUE)
   );
   RETURN NEW;
 END;
