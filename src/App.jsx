@@ -7,7 +7,8 @@ import Layout from './components/layout/Layout';
 // Pages
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
-import Profile from './pages/Profile';
+import ProfileView from './pages/ProfileView';
+import ProfileEdit from './pages/Profile';
 import Discover from './pages/Discover';
 import Matches from './pages/Matches';
 import Chat from './pages/Chat';
@@ -84,7 +85,8 @@ function App() {
         <Route path="discover" element={<Discover />} />
         <Route path="matches" element={<Matches />} />
         <Route path="chat/:matchId" element={<Chat />} />
-        <Route path="profile" element={<Profile />} />
+        <Route path="profile" element={<ProfileView />} />
+        <Route path="profile/edit" element={<ProfileEdit />} />
       </Route>
 
       {/* Catch all */}

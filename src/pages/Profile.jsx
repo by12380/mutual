@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
 import { INTERESTS } from '../lib/interests';
@@ -37,8 +38,9 @@ const POLITICAL_OPTIONS = [
 ];
 
 export default function Profile() {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const { updateProfile, uploadPhoto, addPhoto, removePhoto, loading } = useProfile();
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
   // Form state
@@ -172,14 +174,22 @@ export default function Profile() {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-  };
-
   return (
     <div className="max-w-2xl mx-auto pb-20">
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-6">Edit Profile</h1>
+        {/* Header with back button */}
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => navigate('/profile')}
+            className="p-1 -ml-1 text-gray-600 hover:text-gray-900 transition-colors"
+            aria-label="Back to profile"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-2xl font-bold">Edit Profile</h1>
+        </div>
 
         {/* Status Message */}
         {message.text && (
@@ -424,12 +434,12 @@ export default function Profile() {
           {saving ? 'Saving...' : 'Save Profile'}
         </button>
 
-        {/* Sign Out */}
+        {/* Back to Profile View */}
         <button
-          onClick={handleSignOut}
+          onClick={() => navigate('/profile')}
           className="w-full py-3 text-gray-600 hover:text-gray-800 font-medium"
         >
-          Sign Out
+          Back to Profile
         </button>
       </div>
     </div>
