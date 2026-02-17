@@ -167,6 +167,18 @@ export default function ProfileView() {
             <p className="text-gray-400 text-sm italic mb-3">No bio yet</p>
           )}
 
+          {/* Prompts */}
+          {profile.prompts?.length > 0 && (
+            <div className="space-y-3 mb-3">
+              {profile.prompts.map((p, index) => (
+                <div key={index} className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-primary-600 uppercase tracking-wide mb-1">{p.prompt}</p>
+                  <p className="text-sm text-gray-800">{p.answer}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Interests */}
           {profile.interests?.length > 0 && (
             <div className="flex flex-wrap gap-1.5">

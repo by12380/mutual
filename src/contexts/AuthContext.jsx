@@ -36,6 +36,9 @@ export function AuthProvider({ children }) {
           profileData.location_lat = userMetadata.location_lat || null;
           profileData.location_lng = userMetadata.location_lng || null;
         }
+        if (userMetadata?.prompts) {
+          profileData.prompts = userMetadata.prompts;
+        }
         // Create the profile if it doesn't exist
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')

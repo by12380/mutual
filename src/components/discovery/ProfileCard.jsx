@@ -141,6 +141,21 @@ export default function ProfileCard({ profile, onLike, onPass }) {
           <p className="text-gray-700 text-sm mb-3 line-clamp-3">{profile.bio}</p>
         )}
 
+        {/* Prompts */}
+        {profile.prompts?.length > 0 && (
+          <div className="space-y-2 mb-3">
+            {profile.prompts.slice(0, 2).map((p, index) => (
+              <div key={index} className="bg-gray-50 rounded-lg p-2.5">
+                <p className="text-[10px] font-semibold text-primary-600 uppercase tracking-wide mb-0.5">{p.prompt}</p>
+                <p className="text-xs text-gray-800 line-clamp-2">{p.answer}</p>
+              </div>
+            ))}
+            {profile.prompts.length > 2 && (
+              <p className="text-xs text-gray-400 pl-1">+{profile.prompts.length - 2} more</p>
+            )}
+          </div>
+        )}
+
         {/* Interests */}
         {profile.interests?.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-4">
