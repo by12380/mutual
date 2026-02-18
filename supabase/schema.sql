@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   religion_visible BOOLEAN DEFAULT TRUE,
   political_beliefs TEXT,
   political_beliefs_visible BOOLEAN DEFAULT TRUE,
+  -- Prompts: array of {prompt, answer} objects
+  prompts JSONB DEFAULT '[]',
   -- active_match_id enforces the "one conversation at a time" rule
   active_match_id UUID,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -147,7 +149,8 @@ BEGIN
     id, email, location, location_lat, location_lng,
     height_feet, height_inches, height_visible,
     religion, religion_visible,
-    political_beliefs, political_beliefs_visible
+    political_beliefs, political_beliefs_visible,
+    prompts
   )
   VALUES (
     NEW.id,
@@ -161,7 +164,8 @@ BEGIN
     NEW.raw_user_meta_data->>'religion',
     COALESCE((NEW.raw_user_meta_data->>'religion_visible')::BOOLEAN, TRUE),
     NEW.raw_user_meta_data->>'political_beliefs',
-    COALESCE((NEW.raw_user_meta_data->>'political_beliefs_visible')::BOOLEAN, TRUE)
+    COALESCE((NEW.raw_user_meta_data->>'political_beliefs_visible')::BOOLEAN, TRUE),
+    COALESCE((NEW.raw_user_meta_data->'prompts')::JSONB, '[]'::JSONB)
   );
   RETURN NEW;
 END;
