@@ -1,24 +1,30 @@
 import { useState } from 'react';
 import { useDiscovery } from '../hooks/useDiscovery';
-import ProfileCard from '../components/discovery/ProfileCard';
+import UserProfileCards from '../components/UserProfileCards';
 import MatchModal from '../components/discovery/MatchModal';
 
 export default function Discover() {
   const { currentProfile, hasMore, loading, error, like, pass, refresh, remainingCount } = useDiscovery();
   const [matchedProfile, setMatchedProfile] = useState(null);
   const [matchId, setMatchId] = useState(null);
+  const [likedSections, setLikedSections] = useState({});
 
   const handleLike = async () => {
     const result = await like();
+    setLikedSections({});
     if (result.matched) {
       setMatchedProfile(result.profile);
-      // matchId is now returned from the swipe result (created by DB trigger)
       setMatchId(result.matchId);
     }
   };
 
   const handlePass = async () => {
     await pass();
+    setLikedSections({});
+  };
+
+  const handleSectionLike = (sectionId) => {
+    setLikedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
   };
 
   const closeMatchModal = () => {
@@ -26,7 +32,6 @@ export default function Discover() {
     setMatchId(null);
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -36,7 +41,6 @@ export default function Discover() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
@@ -54,7 +58,6 @@ export default function Discover() {
     );
   }
 
-  // No more profiles
   if (!hasMore || !currentProfile) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
@@ -75,24 +78,48 @@ export default function Discover() {
   }
 
   return (
-    <div className="p-4 pb-20">
+    <div className="max-w-sm mx-auto pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">Discover</h1>
+      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+        <h1 className="text-lg font-bold text-gray-900">Discover</h1>
         <span className="text-sm text-gray-500">{remainingCount} left</span>
       </div>
 
-      {/* Profile Card */}
-      <ProfileCard
-        profile={currentProfile}
-        onLike={handleLike}
-        onPass={handlePass}
-      />
+      <div className="px-4">
+        <UserProfileCards
+          profile={currentProfile}
+          likedSections={likedSections}
+          onSectionLike={handleSectionLike}
+        />
+      </div>
+
+      {/* Like / Pass action buttons */}
+      <div className="px-4 mt-4 flex justify-center gap-6">
+        <button
+          onClick={handlePass}
+          className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-red-100 hover:text-red-500 transition-colors shadow-md"
+          aria-label="Pass"
+        >
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <button
+          onClick={handleLike}
+          className="w-16 h-16 rounded-full bg-primary-500 flex items-center justify-center text-white hover:bg-primary-600 transition-colors shadow-md"
+          aria-label="Like"
+        >
+          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+          </svg>
+        </button>
+      </div>
 
       {/* Keyboard hints */}
       <div className="hidden md:flex justify-center gap-8 mt-4 text-sm text-gray-400">
-        <span>← Pass</span>
-        <span>Like →</span>
+        <span>&larr; Pass</span>
+        <span>Like &rarr;</span>
       </div>
 
       {/* Match Modal */}
