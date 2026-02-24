@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useCardComments } from '../hooks/useCardComments';
 import UserProfileCards from '../components/UserProfileCards';
 import { supabase } from '../lib/supabase';
 
@@ -39,6 +40,11 @@ export default function ProfileView() {
   const [cardLikes, setCardLikes] = useState([]);
   const [likesLoading, setLikesLoading] = useState(true);
   const [likesError, setLikesError] = useState(null);
+
+  const {
+    commentsBySection,
+    deleteComment,
+  } = useCardComments(profile?.id);
 
   useEffect(() => {
     const fetchLikes = async () => {
@@ -126,7 +132,14 @@ export default function ProfileView() {
       </div>
 
       <div className="px-4">
-        <UserProfileCards profile={profile} showSectionLikes={false} />
+        <UserProfileCards
+          profile={profile}
+          showSectionLikes={false}
+          commentsBySection={commentsBySection}
+          onDeleteComment={deleteComment}
+          currentUserId={profile?.id}
+          profileOwnerId={profile?.id}
+        />
       </div>
 
       {/* Likes summary */}

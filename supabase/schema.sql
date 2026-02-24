@@ -89,6 +89,24 @@ CREATE INDEX IF NOT EXISTS idx_profile_card_likes_liked_profile_id ON public.pro
 CREATE INDEX IF NOT EXISTS idx_profile_card_likes_created_at ON public.profile_card_likes(created_at DESC);
 
 -- -----------------------------------------------------------------------------
+-- PROFILE CARD COMMENTS TABLE
+-- Stores comments on specific cards/sections of a profile.
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.profile_card_comments (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  commenter_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  profile_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  section_id TEXT NOT NULL,
+  body TEXT NOT NULL CHECK (char_length(body) > 0 AND char_length(body) <= 500),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_profile_card_comments_profile_section
+  ON public.profile_card_comments(profile_id, section_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_profile_card_comments_commenter
+  ON public.profile_card_comments(commenter_id);
+
+-- -----------------------------------------------------------------------------
 -- MATCHES TABLE
 -- Created when two users mutually like each other.
 -- Stores the conversation state between matched users.
@@ -305,6 +323,7 @@ CREATE TRIGGER on_swipe_check_match
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.swipes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profile_card_likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profile_card_comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
@@ -399,6 +418,37 @@ CREATE POLICY "Users can delete their own profile card likes"
   FOR DELETE
   TO authenticated
   USING (auth.uid() = liker_id);
+
+-- -----------------------------------------------------------------------------
+-- PROFILE CARD COMMENTS POLICIES
+-- Any authenticated user can read comments on any profile.
+-- Users can post comments as themselves and delete their own comments.
+-- -----------------------------------------------------------------------------
+
+CREATE POLICY "Comments are viewable by authenticated users"
+  ON public.profile_card_comments
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "Users can post comments as themselves"
+  ON public.profile_card_comments
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = commenter_id);
+
+CREATE POLICY "Users can delete their own comments"
+  ON public.profile_card_comments
+  FOR DELETE
+  TO authenticated
+  USING (auth.uid() = commenter_id);
+
+-- Profile owners can also delete comments on their own profile
+CREATE POLICY "Profile owners can delete comments on their profile"
+  ON public.profile_card_comments
+  FOR DELETE
+  TO authenticated
+  USING (auth.uid() = profile_id);
 
 -- -----------------------------------------------------------------------------
 -- MATCHES POLICIES
@@ -537,6 +587,9 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
 
 -- Enable realtime for matches table (for match notifications)
 ALTER PUBLICATION supabase_realtime ADD TABLE public.matches;
+
+-- Enable realtime for profile card comments (for live comment updates)
+ALTER PUBLICATION supabase_realtime ADD TABLE public.profile_card_comments;
 
 -- =============================================================================
 -- SAMPLE DATA (Optional - for testing)

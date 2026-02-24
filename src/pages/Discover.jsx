@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useDiscovery } from '../hooks/useDiscovery';
+import { useCardComments } from '../hooks/useCardComments';
+import { useAuth } from '../contexts/AuthContext';
 import UserProfileCards from '../components/UserProfileCards';
 import MatchModal from '../components/discovery/MatchModal';
 
 export default function Discover() {
+  const { user } = useAuth();
   const {
     currentProfile,
     hasMore,
@@ -16,6 +19,11 @@ export default function Discover() {
     refresh,
     remainingCount,
   } = useDiscovery();
+  const {
+    commentsBySection,
+    addComment,
+    deleteComment,
+  } = useCardComments(currentProfile?.id);
   const [matchedProfile, setMatchedProfile] = useState(null);
   const [matchId, setMatchId] = useState(null);
 
@@ -98,6 +106,11 @@ export default function Discover() {
           profile={currentProfile}
           likedSections={likedSections}
           onSectionLike={handleSectionLike}
+          commentsBySection={commentsBySection}
+          onAddComment={addComment}
+          onDeleteComment={deleteComment}
+          currentUserId={user?.id}
+          profileOwnerId={currentProfile?.id}
         />
       </div>
 

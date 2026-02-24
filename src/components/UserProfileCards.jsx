@@ -1,21 +1,32 @@
 import { useState } from 'react';
 import { getInterestName } from '../lib/interests';
+import CardCommentThread from './CardCommentThread';
 
 /**
  * Reusable card-based profile display.
  * Renders a user's photos, bio, details, interests, and prompts
  * as a vertical stack of cards — used on both ProfileView and Discover.
  *
- * @param {Object}   profile          - User profile data
- * @param {boolean}  showSectionLikes - Whether to render per-section heart buttons (default true)
- * @param {Object}   likedSections    - Controlled liked state (keys = sectionId, values = bool)
- * @param {Function} onSectionLike    - Callback when a section heart is toggled (sectionId) => void
+ * @param {Object}   profile            - User profile data
+ * @param {boolean}  showSectionLikes   - Whether to render per-section heart buttons (default true)
+ * @param {Object}   likedSections      - Controlled liked state (keys = sectionId, values = bool)
+ * @param {Function} onSectionLike      - Callback when a section heart is toggled (sectionId) => void
+ * @param {Object}   commentsBySection  - { sectionId: [comment, ...] }
+ * @param {Function} onAddComment       - (sectionId, body) => Promise
+ * @param {Function} onDeleteComment    - (commentId, sectionId) => Promise
+ * @param {string}   currentUserId      - The logged-in user's id (for delete permissions)
+ * @param {string}   profileOwnerId     - The profile owner's id (owner can also delete)
  */
 export default function UserProfileCards({
   profile,
   showSectionLikes = true,
   likedSections: controlledLiked,
   onSectionLike,
+  commentsBySection = {},
+  onAddComment,
+  onDeleteComment,
+  currentUserId,
+  profileOwnerId,
 }) {
   const [internalLiked, setInternalLiked] = useState({});
 
@@ -58,6 +69,22 @@ export default function UserProfileCards({
           <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
         </svg>
       </button>
+    );
+  };
+
+  const hasAnyComments = Object.keys(commentsBySection).length > 0;
+  const showComments = !!onAddComment || hasAnyComments;
+
+  const commentThread = (sectionId) => {
+    if (!showComments) return null;
+    return (
+      <CardCommentThread
+        comments={commentsBySection[sectionId] || []}
+        onAdd={onAddComment ? (body) => onAddComment(sectionId, body) : null}
+        onDelete={(commentId) => onDeleteComment?.(commentId, sectionId)}
+        currentUserId={currentUserId}
+        profileOwnerId={profileOwnerId}
+      />
     );
   };
 
@@ -135,6 +162,7 @@ export default function UserProfileCards({
           )}
         </div>
         {sectionLikeButton('intro', 'Like profile intro')}
+        {commentThread('intro')}
       </div>
 
       {/* Interests card */}
@@ -155,6 +183,7 @@ export default function UserProfileCards({
           <p className="text-sm text-gray-400 italic">No interests yet</p>
         )}
         {sectionLikeButton('interests', 'Like interests')}
+        {commentThread('interests')}
       </div>
 
       {/* Additional photo cards */}
@@ -168,6 +197,7 @@ export default function UserProfileCards({
             />
           </div>
           {sectionLikeButton(`photo-${index + 2}`, `Like photo ${index + 2}`)}
+          {commentThread(`photo-${index + 2}`)}
         </div>
       ))}
 
@@ -179,6 +209,7 @@ export default function UserProfileCards({
           </p>
           <p className="text-sm text-gray-800">{prompt.answer}</p>
           {sectionLikeButton(`prompt-${index + 1}`, `Like prompt ${index + 1}`)}
+          {commentThread(`prompt-${index + 1}`)}
         </div>
       ))}
     </div>
