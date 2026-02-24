@@ -10,8 +10,10 @@ export function useDiscovery() {
   const { user } = useAuth();
   const [profiles, setProfiles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [likedSections, setLikedSections] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const currentProfile = profiles[currentIndex] || null;
 
   /**
    * Fetch profiles that the user hasn't swiped on yet
@@ -48,6 +50,7 @@ export function useDiscovery() {
 
       setProfiles(profilesData || []);
       setCurrentIndex(0);
+      setLikedSections({});
     } catch (err) {
       console.error('Error fetching profiles:', err);
       setError(err.message);
@@ -60,6 +63,82 @@ export function useDiscovery() {
   useEffect(() => {
     fetchProfiles();
   }, [fetchProfiles]);
+
+  /**
+   * Load persisted section likes for the current profile.
+   */
+  useEffect(() => {
+    const fetchCurrentSectionLikes = async () => {
+      if (!user || !currentProfile?.id) {
+        setLikedSections({});
+        return;
+      }
+
+      const { data, error: likesError } = await supabase
+        .from('profile_card_likes')
+        .select('section_id')
+        .eq('liker_id', user.id)
+        .eq('liked_profile_id', currentProfile.id);
+
+      if (likesError) {
+        console.error('Error fetching profile card likes:', likesError);
+        setLikedSections({});
+        return;
+      }
+
+      const nextLikedSections = {};
+      (data || []).forEach((item) => {
+        nextLikedSections[item.section_id] = true;
+      });
+      setLikedSections(nextLikedSections);
+    };
+
+    fetchCurrentSectionLikes();
+  }, [user, currentProfile?.id]);
+
+  /**
+   * Toggle like on a specific section card for the current profile.
+   */
+  const toggleSectionLike = useCallback(async (sectionId) => {
+    if (!user || !currentProfile?.id || !sectionId) {
+      return { error: new Error('No profile card to like') };
+    }
+
+    const alreadyLiked = likedSections[sectionId] === true;
+
+    try {
+      if (alreadyLiked) {
+        const { error: deleteError } = await supabase
+          .from('profile_card_likes')
+          .delete()
+          .eq('liker_id', user.id)
+          .eq('liked_profile_id', currentProfile.id)
+          .eq('section_id', sectionId);
+
+        if (deleteError) throw deleteError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('profile_card_likes')
+          .insert({
+            liker_id: user.id,
+            liked_profile_id: currentProfile.id,
+            section_id: sectionId,
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      setLikedSections((prev) => ({
+        ...prev,
+        [sectionId]: !alreadyLiked,
+      }));
+
+      return { liked: !alreadyLiked };
+    } catch (err) {
+      console.error('Error toggling profile card like:', err);
+      return { error: err };
+    }
+  }, [user, currentProfile?.id, likedSections]);
 
   /**
    * Record a swipe (like or pass)
@@ -120,6 +199,7 @@ export function useDiscovery() {
 
       // Move to next profile
       setCurrentIndex(prev => prev + 1);
+      setLikedSections({});
 
       return { matched, matchId, profile: targetProfile };
     } catch (err) {
@@ -139,11 +219,6 @@ export function useDiscovery() {
   const pass = useCallback(() => swipe('pass'), [swipe]);
 
   /**
-   * Get the current profile to display
-   */
-  const currentProfile = profiles[currentIndex] || null;
-
-  /**
    * Check if there are more profiles to show
    */
   const hasMore = currentIndex < profiles.length;
@@ -155,6 +230,8 @@ export function useDiscovery() {
     error,
     like,
     pass,
+    likedSections,
+    toggleSectionLike,
     refresh: fetchProfiles,
     remainingCount: profiles.length - currentIndex,
   };

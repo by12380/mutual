@@ -4,14 +4,23 @@ import UserProfileCards from '../components/UserProfileCards';
 import MatchModal from '../components/discovery/MatchModal';
 
 export default function Discover() {
-  const { currentProfile, hasMore, loading, error, like, pass, refresh, remainingCount } = useDiscovery();
+  const {
+    currentProfile,
+    hasMore,
+    loading,
+    error,
+    like,
+    pass,
+    likedSections,
+    toggleSectionLike,
+    refresh,
+    remainingCount,
+  } = useDiscovery();
   const [matchedProfile, setMatchedProfile] = useState(null);
   const [matchId, setMatchId] = useState(null);
-  const [likedSections, setLikedSections] = useState({});
 
   const handleLike = async () => {
     const result = await like();
-    setLikedSections({});
     if (result.matched) {
       setMatchedProfile(result.profile);
       setMatchId(result.matchId);
@@ -20,11 +29,10 @@ export default function Discover() {
 
   const handlePass = async () => {
     await pass();
-    setLikedSections({});
   };
 
-  const handleSectionLike = (sectionId) => {
-    setLikedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+  const handleSectionLike = async (sectionId) => {
+    await toggleSectionLike(sectionId);
   };
 
   const closeMatchModal = () => {

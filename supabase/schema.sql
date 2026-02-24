@@ -72,6 +72,23 @@ CREATE INDEX IF NOT EXISTS idx_swipes_swiped_id ON public.swipes(swiped_id);
 CREATE INDEX IF NOT EXISTS idx_swipes_direction ON public.swipes(direction) WHERE direction = 'like';
 
 -- -----------------------------------------------------------------------------
+-- PROFILE CARD LIKES TABLE
+-- Stores likes on specific cards/sections of a profile.
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.profile_card_likes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  liker_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  liked_profile_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  section_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT unique_profile_card_like UNIQUE (liker_id, liked_profile_id, section_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_profile_card_likes_liker_id ON public.profile_card_likes(liker_id);
+CREATE INDEX IF NOT EXISTS idx_profile_card_likes_liked_profile_id ON public.profile_card_likes(liked_profile_id);
+CREATE INDEX IF NOT EXISTS idx_profile_card_likes_created_at ON public.profile_card_likes(created_at DESC);
+
+-- -----------------------------------------------------------------------------
 -- MATCHES TABLE
 -- Created when two users mutually like each other.
 -- Stores the conversation state between matched users.
@@ -287,6 +304,7 @@ CREATE TRIGGER on_swipe_check_match
 -- Enable RLS on all tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.swipes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profile_card_likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 
@@ -336,6 +354,16 @@ CREATE POLICY "Users can view their own swipes"
   TO authenticated
   USING (auth.uid() = swiper_id);
 
+-- Allow users to view likes they receive on their own profile
+CREATE POLICY "Users can view likes on their profile"
+  ON public.swipes
+  FOR SELECT
+  TO authenticated
+  USING (
+    auth.uid() = swiped_id
+    AND direction = 'like'
+  );
+
 -- Allow users to create swipes as themselves
 CREATE POLICY "Users can create swipes as themselves"
   ON public.swipes
@@ -348,6 +376,29 @@ CREATE POLICY "Users can create swipes as themselves"
 
 -- Prevent swipe deletions (maintain history)
 -- No DELETE policy = deletes not allowed
+
+-- -----------------------------------------------------------------------------
+-- PROFILE CARD LIKES POLICIES
+-- Users can like/unlike sections as themselves and both parties can view likes.
+-- -----------------------------------------------------------------------------
+
+CREATE POLICY "Users can view their own card likes and likes on their profile"
+  ON public.profile_card_likes
+  FOR SELECT
+  TO authenticated
+  USING (auth.uid() = liker_id OR auth.uid() = liked_profile_id);
+
+CREATE POLICY "Users can create profile card likes as themselves"
+  ON public.profile_card_likes
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = liker_id);
+
+CREATE POLICY "Users can delete their own profile card likes"
+  ON public.profile_card_likes
+  FOR DELETE
+  TO authenticated
+  USING (auth.uid() = liker_id);
 
 -- -----------------------------------------------------------------------------
 -- MATCHES POLICIES
