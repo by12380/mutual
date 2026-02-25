@@ -10,6 +10,7 @@ import SignUp from './pages/SignUp';
 import ProfileView from './pages/ProfileView';
 import ProfileEdit from './pages/Profile';
 import Discover from './pages/Discover';
+import Likes from './pages/Likes';
 import Matches from './pages/Matches';
 import Chat from './pages/Chat';
 
@@ -83,6 +84,7 @@ function App() {
       >
         <Route index element={<Navigate to="/discover" replace />} />
         <Route path="discover" element={<Discover />} />
+        <Route path="likes" element={<Likes />} />
         <Route path="matches" element={<Matches />} />
         <Route path="chat/:matchId" element={<Chat />} />
         <Route path="profile" element={<ProfileView />} />
