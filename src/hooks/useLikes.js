@@ -11,6 +11,7 @@ export function useLikes() {
   const { user } = useAuth();
   const [admirers, setAdmirers] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [likedSections, setLikedSections] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -173,6 +174,79 @@ export function useLikes() {
   }, [fetchAdmirers]);
 
   /**
+   * Load persisted section likes for the current admirer's profile.
+   */
+  useEffect(() => {
+    const fetchCurrentSectionLikes = async () => {
+      if (!user || !currentAdmirer?.profile?.id) {
+        setLikedSections({});
+        return;
+      }
+
+      const { data, error: likesError } = await supabase
+        .from('profile_card_likes')
+        .select('section_id')
+        .eq('liker_id', user.id)
+        .eq('liked_profile_id', currentAdmirer.profile.id);
+
+      if (likesError) {
+        console.error('Error fetching profile card likes:', likesError);
+        setLikedSections({});
+        return;
+      }
+
+      const next = {};
+      (data || []).forEach((item) => {
+        next[item.section_id] = true;
+      });
+      setLikedSections(next);
+    };
+
+    fetchCurrentSectionLikes();
+  }, [user, currentAdmirer?.profile?.id]);
+
+  const toggleSectionLike = useCallback(async (sectionId) => {
+    if (!user || !currentAdmirer?.profile?.id || !sectionId) {
+      return { error: new Error('No profile card to like') };
+    }
+
+    const alreadyLiked = likedSections[sectionId] === true;
+
+    try {
+      if (alreadyLiked) {
+        const { error: deleteError } = await supabase
+          .from('profile_card_likes')
+          .delete()
+          .eq('liker_id', user.id)
+          .eq('liked_profile_id', currentAdmirer.profile.id)
+          .eq('section_id', sectionId);
+
+        if (deleteError) throw deleteError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('profile_card_likes')
+          .insert({
+            liker_id: user.id,
+            liked_profile_id: currentAdmirer.profile.id,
+            section_id: sectionId,
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      setLikedSections((prev) => ({
+        ...prev,
+        [sectionId]: !alreadyLiked,
+      }));
+
+      return { liked: !alreadyLiked };
+    } catch (err) {
+      console.error('Error toggling profile card like:', err);
+      return { error: err };
+    }
+  }, [user, currentAdmirer?.profile?.id, likedSections]);
+
+  /**
    * Swipe on the current admirer. Records a swipe and checks for match.
    */
   const swipe = useCallback(
@@ -213,6 +287,7 @@ export function useLikes() {
         }
 
         setCurrentIndex((prev) => prev + 1);
+        setLikedSections({});
 
         return { matched, matchId, profile: currentAdmirer.profile };
       } catch (err) {
@@ -235,6 +310,8 @@ export function useLikes() {
     error,
     likeBack,
     pass,
+    likedSections,
+    toggleSectionLike,
     refresh: fetchAdmirers,
     remainingCount: Math.max(admirers.length - currentIndex, 0),
     totalCount: admirers.length,

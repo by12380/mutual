@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { useLikes } from '../hooks/useLikes';
+import { useCardComments } from '../hooks/useCardComments';
 import { useAuth } from '../contexts/AuthContext';
 import { getInterestName } from '../lib/interests';
 import UserProfileCards from '../components/UserProfileCards';
@@ -14,10 +15,17 @@ export default function Likes() {
     error,
     likeBack,
     pass,
+    likedSections,
+    toggleSectionLike,
     refresh,
     remainingCount,
     totalCount,
   } = useLikes();
+  const {
+    commentsBySection,
+    addComment,
+    deleteComment,
+  } = useCardComments(currentAdmirer?.profile?.id);
 
   const [matchedProfile, setMatchedProfile] = useState(null);
   const [matchId, setMatchId] = useState(null);
@@ -285,7 +293,11 @@ export default function Likes() {
       >
         <UserProfileCards
           profile={profile}
-          showSectionLikes={false}
+          likedSections={likedSections}
+          onSectionLike={toggleSectionLike}
+          commentsBySection={commentsBySection}
+          onAddComment={addComment}
+          onDeleteComment={deleteComment}
           currentUserId={user?.id}
           profileOwnerId={profile.id}
         />
