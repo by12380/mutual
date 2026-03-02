@@ -13,7 +13,7 @@ export function useCardComments(profileId) {
   const [loading, setLoading] = useState(false);
 
   const fetchComments = useCallback(async () => {
-    if (!profileId) {
+    if (!profileId || !user?.id) {
       setCommentsBySection({});
       return;
     }
@@ -35,6 +35,7 @@ export function useCardComments(profileId) {
           )
         `)
         .eq('profile_id', profileId)
+        .or(`profile_id.eq.${user.id},commenter_id.eq.${user.id}`)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -50,7 +51,7 @@ export function useCardComments(profileId) {
     } finally {
       setLoading(false);
     }
-  }, [profileId]);
+  }, [profileId, user?.id]);
 
   useEffect(() => {
     fetchComments();
