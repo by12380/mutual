@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { getInterestName } from '../lib/interests';
 import CardCommentThread from './CardCommentThread';
 
@@ -7,15 +7,16 @@ import CardCommentThread from './CardCommentThread';
  * Renders a user's photos, bio, details, interests, and prompts
  * as a vertical stack of cards — used on both ProfileView and Discover.
  *
- * @param {Object}   profile            - User profile data
- * @param {boolean}  showSectionLikes   - Whether to render per-section heart buttons (default true)
- * @param {Object}   likedSections      - Controlled liked state (keys = sectionId, values = bool)
- * @param {Function} onSectionLike      - Callback when a section heart is toggled (sectionId) => void
- * @param {Object}   commentsBySection  - { sectionId: [comment, ...] }
- * @param {Function} onAddComment       - (sectionId, body) => Promise
- * @param {Function} onDeleteComment    - (commentId, sectionId) => Promise
- * @param {string}   currentUserId      - The logged-in user's id (for delete permissions)
- * @param {string}   profileOwnerId     - The profile owner's id (owner can also delete)
+ * @param {Object}   profile              - User profile data
+ * @param {boolean}  showSectionLikes     - Whether to render per-section heart buttons (default true)
+ * @param {Object}   likedSections        - Controlled liked state (keys = sectionId, values = bool)
+ * @param {Function} onSectionLike        - Callback when a section heart is toggled (sectionId) => void
+ * @param {Object}   commentsBySection    - { sectionId: [comment, ...] }
+ * @param {Function} onAddComment         - (sectionId, body) => Promise
+ * @param {Function} onDeleteComment      - (commentId, sectionId) => Promise
+ * @param {string}   currentUserId        - The logged-in user's id (for delete permissions)
+ * @param {string}   profileOwnerId       - The profile owner's id (owner can also delete)
+ * @param {Object}   cardLikesPerSection  - { sectionId: [{ liker: { name, photos } }, ...] } — likes grouped by section (owner view)
  */
 export default function UserProfileCards({
   profile,
@@ -27,8 +28,25 @@ export default function UserProfileCards({
   onDeleteComment,
   currentUserId,
   profileOwnerId,
+  cardLikesPerSection = {},
 }) {
   const [internalLiked, setInternalLiked] = useState({});
+  const [expandedLikesSection, setExpandedLikesSection] = useState(null);
+  const popoverRef = useRef(null);
+
+  const isOwner = currentUserId && currentUserId === profileOwnerId;
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target)) {
+        setExpandedLikesSection(null);
+      }
+    };
+    if (expandedLikesSection) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [expandedLikesSection]);
 
   const likedSections = controlledLiked ?? internalLiked;
 
@@ -50,6 +68,49 @@ export default function UserProfileCards({
     (profile.height_feet && profile.height_visible !== false) ||
     (profile.religion && profile.religion_visible !== false) ||
     (profile.political_beliefs && profile.political_beliefs_visible !== false);
+
+  const sectionLikesBadge = (sectionId) => {
+    if (!isOwner) return null;
+    const likes = cardLikesPerSection[sectionId];
+    if (!likes || likes.length === 0) return null;
+
+    const isExpanded = expandedLikesSection === sectionId;
+
+    return (
+      <div className="relative inline-block" ref={isExpanded ? popoverRef : undefined}>
+        <button
+          type="button"
+          onClick={() => setExpandedLikesSection(isExpanded ? null : sectionId)}
+          className="inline-flex items-center gap-1 px-2.5 py-1 bg-pink-50 text-pink-600 rounded-full text-xs font-medium hover:bg-pink-100 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+          </svg>
+          {likes.length} {likes.length === 1 ? 'like' : 'likes'}
+        </button>
+
+        {isExpanded && (
+          <div className="absolute left-0 mt-1.5 z-20 bg-white border border-gray-200 rounded-xl shadow-lg p-3 min-w-[180px] animate-fade-in">
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-2">Liked by</p>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {likes.map((like) => (
+                <div key={like.liker_id || like.liker?.id} className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                    <img
+                      src={like.liker?.photos?.[0] || 'https://via.placeholder.com/28?text=?'}
+                      alt={like.liker?.name || 'User'}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className="text-sm text-gray-800 truncate">{like.liker?.name || 'Unknown'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const sectionLikeButton = (sectionId, label) => {
     if (!showSectionLikes) return null;
@@ -160,6 +221,7 @@ export default function UserProfileCards({
           ) : (
             <p className="text-gray-400 text-sm italic">No bio yet</p>
           )}
+          <div className="mt-2">{sectionLikesBadge('intro')}</div>
         </div>
         {sectionLikeButton('intro', 'Like profile intro')}
         {commentThread('intro')}
@@ -182,36 +244,47 @@ export default function UserProfileCards({
         ) : (
           <p className="text-sm text-gray-400 italic">No interests yet</p>
         )}
+        <div className="mt-2">{sectionLikesBadge('interests')}</div>
         {sectionLikeButton('interests', 'Like interests')}
         {commentThread('interests')}
       </div>
 
       {/* Additional photo cards */}
-      {additionalPhotos.map((photo, index) => (
-        <div key={`${photo}-${index}`} className="card relative overflow-hidden">
-          <div className="aspect-[3/4] bg-gray-200">
-            <img
-              src={photo}
-              alt={`${profile.name} photo ${index + 2}`}
-              className="w-full h-full object-cover"
-            />
+      {additionalPhotos.map((photo, index) => {
+        const photoSectionId = `photo-${index + 2}`;
+        return (
+          <div key={`${photo}-${index}`} className="card relative overflow-hidden">
+            <div className="aspect-[3/4] bg-gray-200">
+              <img
+                src={photo}
+                alt={`${profile.name} photo ${index + 2}`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {(cardLikesPerSection[photoSectionId]?.length > 0) && (
+              <div className="px-4 pt-2 pb-1">{sectionLikesBadge(photoSectionId)}</div>
+            )}
+            {sectionLikeButton(photoSectionId, `Like photo ${index + 2}`)}
+            {commentThread(photoSectionId)}
           </div>
-          {sectionLikeButton(`photo-${index + 2}`, `Like photo ${index + 2}`)}
-          {commentThread(`photo-${index + 2}`)}
-        </div>
-      ))}
+        );
+      })}
 
       {/* One prompt per card */}
-      {prompts.map((prompt, index) => (
-        <div key={`${prompt.prompt}-${index}`} className="card relative p-4 pb-14">
-          <p className="text-xs font-semibold text-primary-600 uppercase tracking-wide mb-2">
-            {prompt.prompt}
-          </p>
-          <p className="text-sm text-gray-800">{prompt.answer}</p>
-          {sectionLikeButton(`prompt-${index + 1}`, `Like prompt ${index + 1}`)}
-          {commentThread(`prompt-${index + 1}`)}
-        </div>
-      ))}
+      {prompts.map((prompt, index) => {
+        const promptSectionId = `prompt-${index + 1}`;
+        return (
+          <div key={`${prompt.prompt}-${index}`} className="card relative p-4 pb-14">
+            <p className="text-xs font-semibold text-primary-600 uppercase tracking-wide mb-2">
+              {prompt.prompt}
+            </p>
+            <p className="text-sm text-gray-800">{prompt.answer}</p>
+            <div className="mt-2">{sectionLikesBadge(promptSectionId)}</div>
+            {sectionLikeButton(promptSectionId, `Like prompt ${index + 1}`)}
+            {commentThread(promptSectionId)}
+          </div>
+        );
+      })}
     </div>
   );
 }

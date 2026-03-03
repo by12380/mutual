@@ -15,20 +15,6 @@ const formatLikeDate = (dateString) => {
   });
 };
 
-const formatSectionLabel = (sectionId) => {
-  if (sectionId === 'intro') return 'Intro card';
-  if (sectionId === 'interests') return 'Interests card';
-  if (sectionId.startsWith('photo-')) {
-    const photoNumber = sectionId.split('-')[1];
-    return `Photo ${photoNumber} card`;
-  }
-  if (sectionId.startsWith('prompt-')) {
-    const promptNumber = sectionId.split('-')[1];
-    return `Prompt ${promptNumber} card`;
-  }
-  return sectionId;
-};
-
 /**
  * Read-only profile view that shows what the user's profile
  * looks like to other users on the app.
@@ -106,6 +92,12 @@ export default function ProfileView() {
     fetchLikes();
   }, [profile?.id]);
 
+  const cardLikesPerSection = {};
+  cardLikes.forEach((like) => {
+    if (!cardLikesPerSection[like.section_id]) cardLikesPerSection[like.section_id] = [];
+    cardLikesPerSection[like.section_id].push(like);
+  });
+
   const handleSignOut = async () => {
     await signOut();
   };
@@ -139,6 +131,7 @@ export default function ProfileView() {
           onDeleteComment={deleteComment}
           currentUserId={profile?.id}
           profileOwnerId={profile?.id}
+          cardLikesPerSection={cardLikesPerSection}
         />
       </div>
 
@@ -175,32 +168,11 @@ export default function ProfileView() {
           )}
         </div>
 
-        <div className="card p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-900">Card Likes</h2>
-            <span className="text-xs font-medium text-gray-500">{cardLikes.length}</span>
+        {likesError && (
+          <div className="card p-4">
+            <p className="text-xs text-red-500">{likesError}</p>
           </div>
-
-          {likesLoading ? (
-            <p className="text-sm text-gray-500">Loading likes...</p>
-          ) : cardLikes.length === 0 ? (
-            <p className="text-sm text-gray-400 italic">No card likes yet</p>
-          ) : (
-            <div className="space-y-2">
-              {cardLikes.map((like) => (
-                <div key={`${like.liker_id}-${like.section_id}-${like.created_at}`} className="border border-gray-100 rounded-lg p-2.5">
-                  <p className="text-xs font-semibold text-primary-600 mb-1">{formatSectionLabel(like.section_id)}</p>
-                  <p className="text-sm text-gray-800">{like.liker?.name || 'Unknown user'}</p>
-                  <p className="text-xs text-gray-500">{formatLikeDate(like.created_at)}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {likesError && (
-            <p className="mt-3 text-xs text-red-500">{likesError}</p>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Edit Profile Button */}
