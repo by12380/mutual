@@ -1,16 +1,22 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LocationPicker from '../components/LocationPicker';
 import { PROMPT_OPTIONS, MAX_PROMPTS, MIN_PROMPTS_SIGNUP } from '../lib/prompts';
+import { getPublicUrl, supabase } from '../lib/supabase';
 
 export default function SignUp() {
   const { signUp } = useAuth();
-  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('');
+  const [bio, setBio] = useState('');
+  const [photos, setPhotos] = useState([]);
   const [location, setLocation] = useState(null);
   const [height, setHeight] = useState({ feet: '', inches: '' });
   const [heightVisible, setHeightVisible] = useState(true);
@@ -28,7 +34,16 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const totalSteps = 6;
+  const totalSteps = 7;
+  const MAX_SIGNUP_PHOTOS = 6;
+  const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
+
+  const genderOptions = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+    { value: 'non-binary', label: 'Non-binary' },
+    { value: 'other', label: 'Other' },
+  ];
 
   const religionOptions = [
     'Christianity',
@@ -74,12 +89,118 @@ export default function SignUp() {
     setStep(2);
   };
 
+  const validateBasicInfoStep = () => {
+    if (photos.length === 0) {
+      setError('Please upload at least one photo to continue');
+      return false;
+    }
+
+    if (!name.trim()) {
+      setError('Please enter your name');
+      return false;
+    }
+
+    const parsedAge = parseInt(age, 10);
+    if (!Number.isInteger(parsedAge) || parsedAge < 18 || parsedAge > 120) {
+      setError('Please enter a valid age between 18 and 120');
+      return false;
+    }
+
+    if (!gender) {
+      setError('Please select your gender');
+      return false;
+    }
+
+    if (!bio.trim()) {
+      setError('Please enter a short bio');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handlePhotoUpload = (e) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    setError('');
+
+    const remainingSlots = MAX_SIGNUP_PHOTOS - photos.length;
+    if (remainingSlots <= 0) {
+      setError(`You can upload up to ${MAX_SIGNUP_PHOTOS} photos`);
+      e.target.value = '';
+      return;
+    }
+
+    const filesToProcess = selectedFiles.slice(0, remainingSlots);
+    const validPhotos = [];
+
+    for (const file of filesToProcess) {
+      if (!file.type.startsWith('image/')) {
+        setError('Please upload image files only');
+        continue;
+      }
+
+      if (file.size > MAX_PHOTO_SIZE_BYTES) {
+        setError('Each photo must be smaller than 5MB');
+        continue;
+      }
+
+      validPhotos.push({
+        file,
+        previewUrl: URL.createObjectURL(file),
+      });
+    }
+
+    if (validPhotos.length > 0) {
+      setPhotos((prev) => [...prev, ...validPhotos]);
+    }
+
+    if (selectedFiles.length > remainingSlots) {
+      setError(`You can upload up to ${MAX_SIGNUP_PHOTOS} photos`);
+    }
+
+    e.target.value = '';
+  };
+
+  const handleRemovePhoto = (index) => {
+    setPhotos((prev) => {
+      const photoToRemove = prev[index];
+      if (photoToRemove?.previewUrl) {
+        URL.revokeObjectURL(photoToRemove.previewUrl);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const handleSubmit = async () => {
     setError('');
+
+    if (!validateBasicInfoStep()) {
+      return;
+    }
+
+    if (!location || !location.name || location.lat == null || location.lng == null) {
+      setError('Please select your location to continue');
+      return;
+    }
+
+    if (prompts.length < MIN_PROMPTS_SIGNUP) {
+      setError(`Please add at least ${MIN_PROMPTS_SIGNUP} prompts to continue`);
+      return;
+    }
+
     setLoading(true);
+
+    const parsedAge = parseInt(age, 10);
 
     // Build user metadata
     const metadata = {
+      name: name.trim(),
+      age: parsedAge,
+      gender,
+      bio: bio.trim(),
+      photo_count: photos.length,
       location: location.name,
       location_lat: location.lat,
       location_lng: location.lng,
@@ -107,7 +228,7 @@ export default function SignUp() {
     }
 
     const { data, error } = await signUp(email, password, metadata);
-    
+
     if (error) {
       setError(error.message);
       setLoading(false);
@@ -120,6 +241,46 @@ export default function SignUp() {
       setLoading(false);
       return;
     }
+
+    if (data?.session && data?.user?.id && photos.length > 0) {
+      try {
+        const uploadedPhotoUrls = [];
+
+        for (let i = 0; i < photos.length; i += 1) {
+          const photo = photos[i];
+          const extension = photo.file.name.split('.').pop() || 'jpg';
+          const filePath = `${data.user.id}/${Date.now()}-${i}.${extension}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, photo.file, {
+              cacheControl: '3600',
+              upsert: false,
+            });
+
+          if (uploadError) {
+            throw uploadError;
+          }
+
+          uploadedPhotoUrls.push(getPublicUrl('avatars', filePath));
+        }
+
+        if (uploadedPhotoUrls.length > 0) {
+          await supabase
+            .from('profiles')
+            .update({ photos: uploadedPhotoUrls })
+            .eq('id', data.user.id);
+        }
+      } catch (uploadError) {
+        console.error('Photo upload after signup failed:', uploadError);
+      }
+    }
+
+    photos.forEach((photo) => {
+      if (photo?.previewUrl) {
+        URL.revokeObjectURL(photo.previewUrl);
+      }
+    });
 
     setSuccess(true);
     setLoading(false);
@@ -237,8 +398,154 @@ export default function SignUp() {
             </form>
           )}
 
-          {/* Step 2: Location */}
+          {/* Step 2: Photos & Basic Info */}
           {step === 2 && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Photos <span className="text-red-500">*</span>
+                </label>
+                <p className="text-xs text-gray-500 mb-3">
+                  Upload at least 1 photo. You can add up to {MAX_SIGNUP_PHOTOS}.
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {photos.map((photo, index) => (
+                    <div key={photo.previewUrl} className="relative aspect-square">
+                      <img
+                        src={photo.previewUrl}
+                        alt={`Upload ${index + 1}`}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhoto(index)}
+                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600"
+                        aria-label="Remove photo"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+
+                  {photos.length < MAX_SIGNUP_PHOTOS && (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-primary-400 hover:text-primary-400 transition-colors"
+                    >
+                      <svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span className="text-xs">Add Photo</span>
+                    </button>
+                  )}
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  multiple
+                  className="hidden"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="input-field"
+                  placeholder="Your name"
+                  maxLength={50}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-1">
+                  Age <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="age"
+                  type="number"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  className="input-field"
+                  placeholder="Your age"
+                  min={18}
+                  max={120}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
+                  Gender <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="gender"
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="input-field"
+                  required
+                >
+                  <option value="">Select gender</option>
+                  {genderOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
+                  Bio <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="bio"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  className="input-field min-h-[100px] resize-none"
+                  placeholder="Tell others about yourself..."
+                  maxLength={500}
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">{bio.length}/500</p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError('');
+                    if (!validateBasicInfoStep()) {
+                      return;
+                    }
+                    setStep(3);
+                  }}
+                  className="btn-primary flex-1 py-3"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Location */}
+          {step === 3 && (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -257,7 +564,7 @@ export default function SignUp() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setStep(1)}
+                  onClick={() => setStep(2)}
                   className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                 >
                   Back
@@ -266,11 +573,11 @@ export default function SignUp() {
                   type="button"
                   onClick={() => {
                     setError('');
-                    if (!location || !location.name || !location.lat || !location.lng) {
+                    if (!location || !location.name || location.lat == null || location.lng == null) {
                       setError('Please select your location to continue');
                       return;
                     }
-                    setStep(3);
+                    setStep(4);
                   }}
                   disabled={!location}
                   className="btn-primary flex-1 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -281,8 +588,8 @@ export default function SignUp() {
             </div>
           )}
 
-          {/* Step 3: Height (Optional) */}
-          {step === 3 && (
+          {/* Step 4: Height (Optional) */}
+          {step === 4 && (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -336,14 +643,14 @@ export default function SignUp() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setStep(2)}
+                  onClick={() => setStep(3)}
                   className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                 >
                   Back
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setError(''); setStep(4); }}
+                  onClick={() => { setError(''); setStep(5); }}
                   className="btn-primary flex-1 py-3"
                 >
                   Next
@@ -351,7 +658,7 @@ export default function SignUp() {
               </div>
               <button
                 type="button"
-                onClick={() => { setHeight({ feet: '', inches: '' }); setError(''); setStep(4); }}
+                onClick={() => { setHeight({ feet: '', inches: '' }); setError(''); setStep(5); }}
                 className="w-full text-sm text-gray-500 hover:text-gray-700 transition-colors"
               >
                 Skip
@@ -359,8 +666,8 @@ export default function SignUp() {
             </div>
           )}
 
-          {/* Step 4: Religion (Optional) */}
-          {step === 4 && (
+          {/* Step 5: Religion (Optional) */}
+          {step === 5 && (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -406,14 +713,14 @@ export default function SignUp() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setStep(3)}
+                  onClick={() => setStep(4)}
                   className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                 >
                   Back
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setError(''); setStep(5); }}
+                  onClick={() => { setError(''); setStep(6); }}
                   className="btn-primary flex-1 py-3"
                 >
                   Next
@@ -421,7 +728,7 @@ export default function SignUp() {
               </div>
               <button
                 type="button"
-                onClick={() => { setReligion(''); setError(''); setStep(5); }}
+                onClick={() => { setReligion(''); setError(''); setStep(6); }}
                 className="w-full text-sm text-gray-500 hover:text-gray-700 transition-colors"
               >
                 Skip
@@ -429,8 +736,8 @@ export default function SignUp() {
             </div>
           )}
 
-          {/* Step 5: Political Beliefs (Optional) */}
-          {step === 5 && (
+          {/* Step 6: Political Beliefs (Optional) */}
+          {step === 6 && (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -476,14 +783,14 @@ export default function SignUp() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setStep(4)}
+                  onClick={() => setStep(5)}
                   className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                 >
                   Back
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setError(''); setStep(6); }}
+                  onClick={() => { setError(''); setStep(7); }}
                   className="btn-primary flex-1 py-3"
                 >
                   Next
@@ -491,7 +798,7 @@ export default function SignUp() {
               </div>
               <button
                 type="button"
-                onClick={() => { setPoliticalBeliefs(''); setError(''); setStep(6); }}
+                onClick={() => { setPoliticalBeliefs(''); setError(''); setStep(7); }}
                 className="w-full text-sm text-gray-500 hover:text-gray-700 transition-colors"
               >
                 Skip
@@ -499,8 +806,8 @@ export default function SignUp() {
             </div>
           )}
 
-          {/* Step 6: Profile Prompts (Required — at least 3) */}
-          {step === 6 && (
+          {/* Step 7: Profile Prompts (Required — at least 3) */}
+          {step === 7 && (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -699,7 +1006,7 @@ export default function SignUp() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setStep(5)}
+                  onClick={() => setStep(6)}
                   className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                 >
                   Back

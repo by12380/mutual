@@ -181,7 +181,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (
-    id, email, location, location_lat, location_lng,
+    id, email, name, age, gender, bio, photos, location, location_lat, location_lng,
     height_feet, height_inches, height_visible,
     religion, religion_visible,
     political_beliefs, political_beliefs_visible,
@@ -190,6 +190,18 @@ BEGIN
   VALUES (
     NEW.id,
     NEW.email,
+    NEW.raw_user_meta_data->>'name',
+    CASE
+      WHEN (NEW.raw_user_meta_data->>'age') ~ '^[0-9]+$' THEN (NEW.raw_user_meta_data->>'age')::INTEGER
+      ELSE NULL
+    END,
+    NEW.raw_user_meta_data->>'gender',
+    NEW.raw_user_meta_data->>'bio',
+    CASE
+      WHEN jsonb_typeof(NEW.raw_user_meta_data->'photos') = 'array'
+        THEN ARRAY(SELECT jsonb_array_elements_text(NEW.raw_user_meta_data->'photos'))
+      ELSE ARRAY[]::TEXT[]
+    END,
     NEW.raw_user_meta_data->>'location',
     (NEW.raw_user_meta_data->>'location_lat')::DOUBLE PRECISION,
     (NEW.raw_user_meta_data->>'location_lng')::DOUBLE PRECISION,

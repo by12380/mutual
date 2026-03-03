@@ -31,10 +31,41 @@ export function AuthProvider({ children }) {
         console.log('Profile not found, creating one...');
         // Build profile with location from user metadata if available
         const profileData = { id: userId, email: userEmail };
+        if (userMetadata?.name) {
+          profileData.name = userMetadata.name;
+        }
+        if (userMetadata?.age) {
+          const parsedAge = parseInt(userMetadata.age, 10);
+          if (Number.isInteger(parsedAge)) {
+            profileData.age = parsedAge;
+          }
+        }
+        if (userMetadata?.gender) {
+          profileData.gender = userMetadata.gender;
+        }
+        if (userMetadata?.bio) {
+          profileData.bio = userMetadata.bio;
+        }
         if (userMetadata?.location) {
           profileData.location = userMetadata.location;
           profileData.location_lat = userMetadata.location_lat || null;
           profileData.location_lng = userMetadata.location_lng || null;
+        }
+        if (userMetadata?.height_feet) {
+          profileData.height_feet = userMetadata.height_feet;
+          profileData.height_inches = userMetadata.height_inches || 0;
+          profileData.height_visible = userMetadata.height_visible !== false;
+        }
+        if (userMetadata?.religion) {
+          profileData.religion = userMetadata.religion;
+          profileData.religion_visible = userMetadata.religion_visible !== false;
+        }
+        if (userMetadata?.political_beliefs) {
+          profileData.political_beliefs = userMetadata.political_beliefs;
+          profileData.political_beliefs_visible = userMetadata.political_beliefs_visible !== false;
+        }
+        if (Array.isArray(userMetadata?.photos) && userMetadata.photos.length > 0) {
+          profileData.photos = userMetadata.photos;
         }
         if (userMetadata?.prompts) {
           profileData.prompts = userMetadata.prompts;
@@ -116,10 +147,31 @@ export function AuthProvider({ children }) {
 
   // Sign up with email and password
   const signUp = async (email, password, metadata = {}) => {
+    const parsedAge = parseInt(metadata.age, 10);
+
+    // Validate required profile fields
+    if (!metadata.name?.trim()) {
+      return { data: null, error: { message: 'Name is required to create an account' } };
+    }
+    if (!Number.isInteger(parsedAge) || parsedAge < 18 || parsedAge > 120) {
+      return { data: null, error: { message: 'Age must be between 18 and 120' } };
+    }
+    if (!metadata.gender) {
+      return { data: null, error: { message: 'Gender is required to create an account' } };
+    }
+    if (!metadata.bio?.trim()) {
+      return { data: null, error: { message: 'Bio is required to create an account' } };
+    }
+    if (!metadata.photo_count || metadata.photo_count < 1) {
+      return { data: null, error: { message: 'At least one photo is required to create an account' } };
+    }
+
     // Validate location is provided
-    if (!metadata.location || !metadata.location_lat || !metadata.location_lng) {
+    if (!metadata.location || metadata.location_lat == null || metadata.location_lng == null) {
       return { data: null, error: { message: 'Location is required to create an account' } };
     }
+
+    metadata.age = parsedAge;
 
     const { data, error } = await supabase.auth.signUp({
       email,
