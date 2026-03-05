@@ -82,6 +82,49 @@ export function useCardComments(profileId) {
     };
   }, [profileId, fetchComments]);
 
+  const ensureConversation = useCallback(
+    async (commentBody) => {
+      if (!user || !profileId || user.id === profileId) return;
+
+      try {
+        const orderedUser1 = user.id < profileId ? user.id : profileId;
+        const orderedUser2 = user.id < profileId ? profileId : user.id;
+
+        const { data: existingMatch } = await supabase
+          .from('matches')
+          .select('id')
+          .eq('user1_id', orderedUser1)
+          .eq('user2_id', orderedUser2)
+          .maybeSingle();
+
+        if (existingMatch) return;
+
+        const { data: newMatch, error: matchError } = await supabase
+          .from('matches')
+          .insert({
+            user1_id: orderedUser1,
+            user2_id: orderedUser2,
+            status: 'pending',
+          })
+          .select('id')
+          .single();
+
+        if (matchError) throw matchError;
+
+        if (newMatch) {
+          await supabase.from('messages').insert({
+            match_id: newMatch.id,
+            sender_id: user.id,
+            content: commentBody,
+          });
+        }
+      } catch (err) {
+        console.error('Error creating conversation from comment:', err);
+      }
+    },
+    [user, profileId],
+  );
+
   const addComment = useCallback(
     async (sectionId, body) => {
       if (!user || !profileId || !sectionId || !body?.trim()) {
@@ -118,13 +161,15 @@ export function useCardComments(profileId) {
           [sectionId]: [...(prev[sectionId] || []), data],
         }));
 
+        await ensureConversation(body.trim());
+
         return { comment: data };
       } catch (err) {
         console.error('Error adding comment:', err);
         return { error: err };
       }
     },
-    [user, profileId],
+    [user, profileId, ensureConversation],
   );
 
   const deleteComment = useCallback(
