@@ -13,6 +13,7 @@ import Discover from './pages/Discover';
 import Likes from './pages/Likes';
 import Matches from './pages/Matches';
 import Chat from './pages/Chat';
+import Messages from './pages/Messages';
 
 // Protected route wrapper
 function ProtectedRoute({ children }) {
@@ -86,6 +87,7 @@ function App() {
         <Route path="discover" element={<Discover />} />
         <Route path="likes" element={<Likes />} />
         <Route path="matches" element={<Matches />} />
+        <Route path="messages" element={<Messages />} />
         <Route path="chat/:matchId" element={<Chat />} />
         <Route path="profile" element={<ProfileView />} />
         <Route path="profile/edit" element={<ProfileEdit />} />

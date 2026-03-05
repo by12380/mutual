@@ -65,8 +65,8 @@ export default function Chat() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <p className="text-red-500 mb-4">{error}</p>
-        <button onClick={() => navigate('/matches')} className="btn-primary">
-          Back to Matches
+        <button onClick={() => navigate('/messages')} className="btn-primary">
+          Back to Messages
         </button>
       </div>
     );
@@ -77,7 +77,7 @@ export default function Chat() {
       {/* Header */}
       <header className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
         <button
-          onClick={() => navigate('/matches')}
+          onClick={() => navigate('/messages')}
           className="p-2 -ml-2 text-gray-500 hover:text-gray-700"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
