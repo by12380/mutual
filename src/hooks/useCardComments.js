@@ -30,7 +30,8 @@ export function useCardComments(profileId) {
           created_at,
           commenter:profiles!profile_card_comments_commenter_id_fkey (
             id,
-            name,
+            first_name,
+            last_name,
             photos
           )
         `)
@@ -148,7 +149,8 @@ export function useCardComments(profileId) {
             created_at,
             commenter:profiles!profile_card_comments_commenter_id_fkey (
               id,
-              name,
+              first_name,
+              last_name,
               photos
             )
           `)

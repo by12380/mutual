@@ -21,7 +21,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT,
-  name TEXT,
+  first_name TEXT,
+  last_name TEXT,
   age INTEGER CHECK (age >= 18 AND age <= 120),
   gender TEXT CHECK (gender IN ('male', 'female', 'non-binary', 'other')),
   bio TEXT,
@@ -49,7 +50,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 
 -- Index for faster profile lookups
 CREATE INDEX IF NOT EXISTS idx_profiles_created_at ON public.profiles(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_profiles_name ON public.profiles(name) WHERE name IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_profiles_first_name ON public.profiles(first_name) WHERE first_name IS NOT NULL;
 
 -- -----------------------------------------------------------------------------
 -- SWIPES TABLE
@@ -181,7 +182,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (
-    id, email, name, age, gender, bio, photos, location, location_lat, location_lng,
+    id, email, first_name, last_name, age, gender, bio, photos, location, location_lat, location_lng,
     height_feet, height_inches, height_visible,
     religion, religion_visible,
     political_beliefs, political_beliefs_visible,
@@ -190,7 +191,8 @@ BEGIN
   VALUES (
     NEW.id,
     NEW.email,
-    NEW.raw_user_meta_data->>'name',
+    NEW.raw_user_meta_data->>'first_name',
+    NEW.raw_user_meta_data->>'last_name',
     CASE
       WHEN (NEW.raw_user_meta_data->>'age') ~ '^[0-9]+$' THEN (NEW.raw_user_meta_data->>'age')::INTEGER
       ELSE NULL
@@ -610,11 +612,11 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.profile_card_comments;
 
 /*
 -- Insert sample profiles (replace UUIDs with actual auth.users IDs)
-INSERT INTO public.profiles (id, name, age, gender, bio, interests, photos)
+INSERT INTO public.profiles (id, first_name, last_name, age, gender, bio, interests, photos)
 VALUES 
-  ('00000000-0000-0000-0000-000000000001', 'Alex', 28, 'female', 'Love hiking and coffee!', ARRAY['Travel', 'Coffee', 'Hiking'], ARRAY['https://picsum.photos/400/500?random=1']),
-  ('00000000-0000-0000-0000-000000000002', 'Jordan', 32, 'male', 'Software engineer who loves cooking', ARRAY['Cooking', 'Gaming', 'Music'], ARRAY['https://picsum.photos/400/500?random=2']),
-  ('00000000-0000-0000-0000-000000000003', 'Sam', 25, 'non-binary', 'Artist and dog lover', ARRAY['Art', 'Dogs', 'Photography'], ARRAY['https://picsum.photos/400/500?random=3']);
+  ('00000000-0000-0000-0000-000000000001', 'Alex', NULL, 28, 'female', 'Love hiking and coffee!', ARRAY['Travel', 'Coffee', 'Hiking'], ARRAY['https://picsum.photos/400/500?random=1']),
+  ('00000000-0000-0000-0000-000000000002', 'Jordan', NULL, 32, 'male', 'Software engineer who loves cooking', ARRAY['Cooking', 'Gaming', 'Music'], ARRAY['https://picsum.photos/400/500?random=2']),
+  ('00000000-0000-0000-0000-000000000003', 'Sam', NULL, 25, 'non-binary', 'Artist and dog lover', ARRAY['Art', 'Dogs', 'Photography'], ARRAY['https://picsum.photos/400/500?random=3']);
 */
 
 -- =============================================================================

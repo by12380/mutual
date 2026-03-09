@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useMatches } from '../hooks/useMatches';
 import { useAuth } from '../contexts/AuthContext';
+import { getDisplayName } from '../lib/displayName';
 
 export default function Matches() {
   const navigate = useNavigate();
@@ -170,7 +171,7 @@ function MatchCard({ match, onClick, isActive, isEnded }) {
         <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200">
           <img
             src={otherUser?.photos?.[0] || 'https://via.placeholder.com/56?text=?'}
-            alt={otherUser?.name || 'User'}
+            alt={getDisplayName(otherUser)}
             className="w-full h-full object-cover"
           />
         </div>
@@ -183,7 +184,7 @@ function MatchCard({ match, onClick, isActive, isEnded }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
           <h3 className="font-semibold text-gray-900 truncate">
-            {otherUser?.name || 'Unknown'}
+            {getDisplayName(otherUser)}
           </h3>
           {lastMessage && (
             <span className="text-xs text-gray-400 flex-shrink-0 ml-2">

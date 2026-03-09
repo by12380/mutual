@@ -45,7 +45,8 @@ export default function Profile() {
   const fileInputRef = useRef(null);
 
   // Form state
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
   const [bio, setBio] = useState('');
@@ -70,7 +71,8 @@ export default function Profile() {
   // Initialize form with profile data
   useEffect(() => {
     if (profile) {
-      setName(profile.name || '');
+      setFirstName(profile.first_name || '');
+      setLastName(profile.last_name || '');
       setAge(profile.age?.toString() || '');
       setGender(profile.gender || '');
       setBio(profile.bio || '');
@@ -103,7 +105,8 @@ export default function Profile() {
     setMessage({ type: '', text: '' });
 
     const updates = {
-      name: name.trim(),
+      first_name: firstName.trim(),
+      last_name: lastName.trim() || null,
       age: age ? parseInt(age, 10) : null,
       gender: gender || null,
       bio: bio.trim(),
@@ -260,13 +263,27 @@ export default function Profile() {
           <h2 className="text-lg font-semibold mb-3">Basic Info</h2>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              First Name <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
               className="input-field"
-              placeholder="Your name"
+              placeholder="First name"
+              maxLength={50}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="input-field"
+              placeholder="Last name (optional)"
               maxLength={50}
             />
           </div>

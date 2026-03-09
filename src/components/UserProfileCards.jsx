@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { getInterestName } from '../lib/interests';
+import { getDisplayName } from '../lib/displayName';
 import CardCommentThread from './CardCommentThread';
 
 /**
@@ -98,11 +99,11 @@ export default function UserProfileCards({
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                     <img
                       src={like.liker?.photos?.[0] || 'https://via.placeholder.com/28?text=?'}
-                      alt={like.liker?.name || 'User'}
+                      alt={like.liker?.first_name || 'User'}
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <span className="text-sm text-gray-800 truncate">{like.liker?.name || 'Unknown'}</span>
+                  <span className="text-sm text-gray-800 truncate">{getDisplayName(like.liker)}</span>
                 </div>
               ))}
             </div>
@@ -157,13 +158,13 @@ export default function UserProfileCards({
           <div className="relative aspect-[3/4] bg-gray-200">
             <img
               src={mainPhoto}
-              alt={profile.name}
+              alt={getDisplayName(profile)}
               className="w-full h-full object-cover"
             />
             <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />
             <div className="absolute bottom-4 left-4 right-4 text-white">
               <h2 className="text-2xl font-bold">
-                {profile.name}
+                {getDisplayName(profile)}
                 {profile.age && <span className="font-normal">, {profile.age}</span>}
               </h2>
               {profile.location && (
@@ -185,7 +186,7 @@ export default function UserProfileCards({
             <p className="text-sm font-medium">No photos yet</p>
             <div className="mt-2 px-4 text-center">
               <h2 className="text-xl font-bold text-gray-700">
-                {profile.name || 'Your Name'}
+                {getDisplayName(profile) || 'Your Name'}
                 {profile.age && <span className="font-normal">, {profile.age}</span>}
               </h2>
             </div>
@@ -257,7 +258,7 @@ export default function UserProfileCards({
             <div className="aspect-[3/4] bg-gray-200">
               <img
                 src={photo}
-                alt={`${profile.name} photo ${index + 2}`}
+                alt={`${getDisplayName(profile)} photo ${index + 2}`}
                 className="w-full h-full object-cover"
               />
             </div>

@@ -142,7 +142,7 @@ export function useLikes() {
         .from('profiles')
         .select('*')
         .in('id', userIds)
-        .not('name', 'is', null);
+        .not('first_name', 'is', null);
 
       if (profilesError) throw profilesError;
 

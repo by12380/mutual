@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { getDisplayName } from '../../lib/displayName';
 
 /**
  * Modal that appears when two users match
@@ -39,7 +40,7 @@ export default function MatchModal({ profile, onClose, matchId }) {
           It's a Match!
         </h2>
         <p className="text-gray-600 mb-6">
-          You and {profile.name} liked each other
+          You and {getDisplayName(profile)} liked each other
         </p>
 
         {/* Profile Photo */}
@@ -47,7 +48,7 @@ export default function MatchModal({ profile, onClose, matchId }) {
           <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-primary-200 shadow-lg">
             <img
               src={profile.photos?.[0] || 'https://via.placeholder.com/100?text=?'}
-              alt={profile.name}
+              alt={getDisplayName(profile)}
               className="w-full h-full object-cover"
             />
           </div>

@@ -46,7 +46,7 @@ export function useChat(matchId) {
 
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id, name, photos, bio')
+        .select('id, first_name, last_name, photos, bio')
         .eq('id', otherUserId)
         .single();
 

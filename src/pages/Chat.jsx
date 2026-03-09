@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useChat } from '../hooks/useChat';
 import { useMatches } from '../hooks/useMatches';
 import { useAuth } from '../contexts/AuthContext';
+import { getDisplayName } from '../lib/displayName';
 
 export default function Chat() {
   const { matchId } = useParams();
@@ -88,14 +89,14 @@ export default function Chat() {
         <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
           <img
             src={otherUser?.photos?.[0] || 'https://via.placeholder.com/40?text=?'}
-            alt={otherUser?.name}
+            alt={getDisplayName(otherUser)}
             className="w-full h-full object-cover"
           />
         </div>
 
         <div className="flex-1 min-w-0">
           <h1 className="font-semibold text-gray-900 truncate">
-            {otherUser?.name || 'Unknown'}
+            {getDisplayName(otherUser)}
           </h1>
           <p className="text-xs text-gray-500">
             {match?.status === 'active' ? 'Active conversation' : match?.status}
@@ -124,7 +125,7 @@ export default function Chat() {
             </div>
             <h2 className="text-lg font-semibold text-gray-700 mb-1">Start the conversation</h2>
             <p className="text-gray-500 text-sm">
-              Say hi to {otherUser?.name}!
+              Say hi to {getDisplayName(otherUser)}!
             </p>
           </div>
         ) : (

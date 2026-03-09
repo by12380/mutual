@@ -31,8 +31,11 @@ export function AuthProvider({ children }) {
         console.log('Profile not found, creating one...');
         // Build profile with location from user metadata if available
         const profileData = { id: userId, email: userEmail };
-        if (userMetadata?.name) {
-          profileData.name = userMetadata.name;
+        if (userMetadata?.first_name) {
+          profileData.first_name = userMetadata.first_name;
+        }
+        if (userMetadata?.last_name) {
+          profileData.last_name = userMetadata.last_name;
         }
         if (userMetadata?.age) {
           const parsedAge = parseInt(userMetadata.age, 10);
@@ -150,8 +153,8 @@ export function AuthProvider({ children }) {
     const parsedAge = parseInt(metadata.age, 10);
 
     // Validate required profile fields
-    if (!metadata.name?.trim()) {
-      return { data: null, error: { message: 'Name is required to create an account' } };
+    if (!metadata.first_name?.trim()) {
+      return { data: null, error: { message: 'First name is required to create an account' } };
     }
     if (!Number.isInteger(parsedAge) || parsedAge < 18 || parsedAge > 120) {
       return { data: null, error: { message: 'Age must be between 18 and 120' } };

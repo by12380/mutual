@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getDisplayName } from '../lib/displayName';
 
 const formatCommentDate = (dateString) => {
   if (!dateString) return '';
@@ -78,12 +79,12 @@ export default function CardCommentThread({
                 {c.commenter?.photos?.[0] ? (
                   <img
                     src={c.commenter.photos[0]}
-                    alt={c.commenter?.name || ''}
+                    alt={getDisplayName(c.commenter)}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400 text-[10px] font-bold">
-                    {(c.commenter?.name || '?')[0]}
+                    {(c.commenter?.first_name || '?')[0]}
                   </div>
                 )}
               </div>
@@ -91,7 +92,7 @@ export default function CardCommentThread({
               <div className="flex-1 min-w-0">
                 <p className="text-xs leading-snug">
                   <span className="font-semibold text-gray-900 mr-1">
-                    {c.commenter?.name || 'User'}
+                    {getDisplayName(c.commenter)}
                   </span>
                   <span className="text-gray-700">{c.body}</span>
                 </p>

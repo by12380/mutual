@@ -42,7 +42,7 @@ export function useDiscovery() {
         .from('profiles')
         .select('*')
         .not('id', 'in', `(${excludeIds.join(',')})`)
-        .not('name', 'is', null)
+        .not('first_name', 'is', null)
         .order('created_at', { ascending: false })
         .limit(20);
 

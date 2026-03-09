@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCardComments } from '../hooks/useCardComments';
+import { getDisplayName } from '../lib/displayName';
 import UserProfileCards from '../components/UserProfileCards';
 import { supabase } from '../lib/supabase';
 
@@ -53,7 +54,8 @@ export default function ProfileView() {
               created_at,
               swiper:profiles!swipes_swiper_id_fkey (
                 id,
-                name,
+                first_name,
+                last_name,
                 photos
               )
             `)
@@ -68,7 +70,8 @@ export default function ProfileView() {
               created_at,
               liker:profiles!profile_card_likes_liker_id_fkey (
                 id,
-                name,
+                first_name,
+                last_name,
                 photos
               )
             `)
@@ -154,12 +157,12 @@ export default function ProfileView() {
                   <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                     <img
                       src={like.swiper?.photos?.[0] || 'https://via.placeholder.com/32?text=?'}
-                      alt={like.swiper?.name || 'User'}
+                      alt={getDisplayName(like.swiper)}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-800 truncate">{like.swiper?.name || 'Unknown user'}</p>
+                    <p className="text-sm text-gray-800 truncate">{getDisplayName(like.swiper)}</p>
                     <p className="text-xs text-gray-500">{formatLikeDate(like.created_at)}</p>
                   </div>
                 </div>

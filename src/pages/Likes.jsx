@@ -3,6 +3,7 @@ import { useLikes } from '../hooks/useLikes';
 import { useCardComments } from '../hooks/useCardComments';
 import { useAuth } from '../contexts/AuthContext';
 import { getInterestName } from '../lib/interests';
+import { getDisplayName } from '../lib/displayName';
 import UserProfileCards from '../components/UserProfileCards';
 import MatchModal from '../components/discovery/MatchModal';
 
@@ -232,11 +233,11 @@ export default function Likes() {
             <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
               <img
                 src={profile.photos?.[0] || 'https://via.placeholder.com/32?text=?'}
-                alt={profile.name}
+                alt={getDisplayName(profile)}
                 className="w-full h-full object-cover"
               />
             </div>
-            <p className="text-sm font-semibold text-gray-900">{profile.name}</p>
+            <p className="text-sm font-semibold text-gray-900">{getDisplayName(profile)}</p>
           </div>
 
           <div className="space-y-2">

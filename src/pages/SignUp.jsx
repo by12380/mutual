@@ -12,7 +12,8 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
   const [bio, setBio] = useState('');
@@ -95,8 +96,8 @@ export default function SignUp() {
       return false;
     }
 
-    if (!name.trim()) {
-      setError('Please enter your name');
+    if (!firstName.trim()) {
+      setError('Please enter your first name');
       return false;
     }
 
@@ -196,7 +197,8 @@ export default function SignUp() {
 
     // Build user metadata
     const metadata = {
-      name: name.trim(),
+      first_name: firstName.trim(),
+      last_name: lastName.trim() || null,
       age: parsedAge,
       gender,
       bio: bio.trim(),
@@ -451,18 +453,33 @@ export default function SignUp() {
               </div>
 
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Name <span className="text-red-500">*</span>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                  First Name <span className="text-red-500">*</span>
                 </label>
                 <input
-                  id="name"
+                  id="firstName"
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
                   className="input-field"
-                  placeholder="Your name"
+                  placeholder="First name"
                   maxLength={50}
                   required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="input-field"
+                  placeholder="Last name (optional)"
+                  maxLength={50}
                 />
               </div>
 

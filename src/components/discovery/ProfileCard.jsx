@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getInterestName } from '../../lib/interests';
+import { getDisplayName } from '../../lib/displayName';
 
 /**
  * Profile card component for the discovery/swipe view
@@ -53,7 +54,7 @@ export default function ProfileCard({ profile, onLike, onPass }) {
       <div className="relative aspect-[3/4] bg-gray-200">
         <img
           src={photos[currentPhotoIndex]}
-          alt={profile.name}
+          alt={getDisplayName(profile)}
           className="w-full h-full object-cover"
         />
 
@@ -92,7 +93,7 @@ export default function ProfileCard({ profile, onLike, onPass }) {
         {/* Name and Age */}
         <div className="absolute bottom-4 left-4 right-4 text-white">
           <h2 className="text-2xl font-bold">
-            {profile.name}{profile.age && <span className="font-normal">, {profile.age}</span>}
+            {getDisplayName(profile)}{profile.age && <span className="font-normal">, {profile.age}</span>}
           </h2>
           {profile.location && (
             <p className="text-sm text-white/80 flex items-center gap-1 mt-1">
