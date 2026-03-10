@@ -4,6 +4,7 @@ import { useCardComments } from '../hooks/useCardComments';
 import { useAuth } from '../contexts/AuthContext';
 import { getInterestName } from '../lib/interests';
 import { getDisplayName } from '../lib/displayName';
+import { migratePhotos, ensureCardIds, firstPhotoUrl } from '../lib/cardId';
 import UserProfileCards from '../components/UserProfileCards';
 import MatchModal from '../components/discovery/MatchModal';
 
@@ -97,12 +98,16 @@ export default function Likes() {
     }
   }, [handleLikeBack, handlePass]);
 
+  const myPhotos = migratePhotos(myProfile?.photos);
+  const myPrompts = ensureCardIds(myProfile?.prompts || []);
+
   const renderSectionPreview = (sectionId) => {
     if (sectionId === 'intro') {
+      const mainPhotoUrl = myPhotos[0]?.url;
       return (
         <div className="flex items-center gap-2">
-          {myProfile?.photos?.[0] && (
-            <img src={myProfile.photos[0]} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+          {mainPhotoUrl && (
+            <img src={mainPhotoUrl} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
           )}
           <div className="min-w-0">
             <p className="text-xs font-medium text-gray-700">Your intro</p>
@@ -134,22 +139,22 @@ export default function Likes() {
     }
 
     if (sectionId.startsWith('photo-')) {
-      const idx = parseInt(sectionId.split('-')[1]) - 1;
-      const photo = myProfile?.photos?.[idx];
+      const cardId = sectionId.slice('photo-'.length);
+      const photo = myPhotos.find((p) => p.id === cardId);
       if (photo) {
         return (
           <div className="flex items-center gap-2">
-            <img src={photo} alt="" className="w-10 h-14 rounded-lg object-cover flex-shrink-0" />
+            <img src={photo.url} alt="" className="w-10 h-14 rounded-lg object-cover flex-shrink-0" />
             <p className="text-xs font-medium text-gray-700">Your photo</p>
           </div>
         );
       }
-      return <span className="text-xs text-gray-500">Photo {sectionId.split('-')[1]}</span>;
+      return <span className="text-xs text-gray-500">Photo</span>;
     }
 
     if (sectionId.startsWith('prompt-')) {
-      const idx = parseInt(sectionId.split('-')[1]) - 1;
-      const prompt = myProfile?.prompts?.[idx];
+      const cardId = sectionId.slice('prompt-'.length);
+      const prompt = myPrompts.find((p) => p.id === cardId);
       if (prompt) {
         return (
           <div className="min-w-0">
@@ -160,7 +165,7 @@ export default function Likes() {
           </div>
         );
       }
-      return <span className="text-xs text-gray-500">Prompt {sectionId.split('-')[1]}</span>;
+      return <span className="text-xs text-gray-500">Prompt</span>;
     }
 
     return <span className="text-xs text-gray-500">{sectionId}</span>;
@@ -232,7 +237,7 @@ export default function Likes() {
           <div className="flex items-center gap-2 mb-2.5">
             <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
               <img
-                src={profile.photos?.[0] || 'https://via.placeholder.com/32?text=?'}
+                src={firstPhotoUrl(profile.photos, 'https://via.placeholder.com/32?text=?')}
                 alt={getDisplayName(profile)}
                 className="w-full h-full object-cover"
               />

@@ -4,6 +4,7 @@ import { useChat } from '../hooks/useChat';
 import { useMatches } from '../hooks/useMatches';
 import { useAuth } from '../contexts/AuthContext';
 import { getDisplayName } from '../lib/displayName';
+import { firstPhotoUrl } from '../lib/cardId';
 
 export default function Chat() {
   const { matchId } = useParams();
@@ -88,7 +89,7 @@ export default function Chat() {
 
         <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
           <img
-            src={otherUser?.photos?.[0] || 'https://via.placeholder.com/40?text=?'}
+            src={firstPhotoUrl(otherUser?.photos, 'https://via.placeholder.com/40?text=?')}
             alt={getDisplayName(otherUser)}
             className="w-full h-full object-cover"
           />

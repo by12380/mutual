@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { getDisplayName } from '../../lib/displayName';
+import { firstPhotoUrl } from '../../lib/cardId';
 
 /**
  * Modal that appears when two users match
@@ -47,7 +48,7 @@ export default function MatchModal({ profile, onClose, matchId }) {
         <div className="flex justify-center mb-6">
           <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-primary-200 shadow-lg">
             <img
-              src={profile.photos?.[0] || 'https://via.placeholder.com/100?text=?'}
+              src={firstPhotoUrl(profile.photos, 'https://via.placeholder.com/100?text=?')}
               alt={getDisplayName(profile)}
               className="w-full h-full object-cover"
             />

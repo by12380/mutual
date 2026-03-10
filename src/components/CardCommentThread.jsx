@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getDisplayName } from '../lib/displayName';
+import { firstPhotoUrl } from '../lib/cardId';
 
 const formatCommentDate = (dateString) => {
   if (!dateString) return '';
@@ -76,9 +77,9 @@ export default function CardCommentThread({
           {visibleComments.map((c) => (
             <div key={c.id} className="flex gap-2 group">
               <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 mt-0.5">
-                {c.commenter?.photos?.[0] ? (
+                {firstPhotoUrl(c.commenter?.photos) ? (
                   <img
-                    src={c.commenter.photos[0]}
+                    src={firstPhotoUrl(c.commenter.photos)}
                     alt={getDisplayName(c.commenter)}
                     className="w-full h-full object-cover"
                   />

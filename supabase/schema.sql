@@ -27,7 +27,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   gender TEXT CHECK (gender IN ('male', 'female', 'non-binary', 'other')),
   bio TEXT,
   interests TEXT[] DEFAULT '{}',
-  photos TEXT[] DEFAULT '{}',
+  -- photos: JSONB array of {id, url} objects for stable card identity.
+  -- Legacy TEXT[] entries are auto-migrated on read by the client.
+  photos JSONB DEFAULT '[]',
   location TEXT,
   location_lat DOUBLE PRECISION,
   location_lng DOUBLE PRECISION,
@@ -40,7 +42,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   religion_visible BOOLEAN DEFAULT TRUE,
   political_beliefs TEXT,
   political_beliefs_visible BOOLEAN DEFAULT TRUE,
-  -- Prompts: array of {prompt, answer} objects
+  -- Prompts: array of {id, prompt, answer} objects (id for stable card identity)
   prompts JSONB DEFAULT '[]',
   -- active_match_id enforces the "one conversation at a time" rule
   active_match_id UUID,
@@ -201,8 +203,8 @@ BEGIN
     NEW.raw_user_meta_data->>'bio',
     CASE
       WHEN jsonb_typeof(NEW.raw_user_meta_data->'photos') = 'array'
-        THEN ARRAY(SELECT jsonb_array_elements_text(NEW.raw_user_meta_data->'photos'))
-      ELSE ARRAY[]::TEXT[]
+        THEN NEW.raw_user_meta_data->'photos'
+      ELSE '[]'::JSONB
     END,
     NEW.raw_user_meta_data->>'location',
     (NEW.raw_user_meta_data->>'location_lat')::DOUBLE PRECISION,
@@ -614,9 +616,9 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.profile_card_comments;
 -- Insert sample profiles (replace UUIDs with actual auth.users IDs)
 INSERT INTO public.profiles (id, first_name, last_name, age, gender, bio, interests, photos)
 VALUES 
-  ('00000000-0000-0000-0000-000000000001', 'Alex', NULL, 28, 'female', 'Love hiking and coffee!', ARRAY['Travel', 'Coffee', 'Hiking'], ARRAY['https://picsum.photos/400/500?random=1']),
-  ('00000000-0000-0000-0000-000000000002', 'Jordan', NULL, 32, 'male', 'Software engineer who loves cooking', ARRAY['Cooking', 'Gaming', 'Music'], ARRAY['https://picsum.photos/400/500?random=2']),
-  ('00000000-0000-0000-0000-000000000003', 'Sam', NULL, 25, 'non-binary', 'Artist and dog lover', ARRAY['Art', 'Dogs', 'Photography'], ARRAY['https://picsum.photos/400/500?random=3']);
+  ('00000000-0000-0000-0000-000000000001', 'Alex', NULL, 28, 'female', 'Love hiking and coffee!', ARRAY['Travel', 'Coffee', 'Hiking'], '[{"id":"s1","url":"https://picsum.photos/400/500?random=1"}]'::jsonb),
+  ('00000000-0000-0000-0000-000000000002', 'Jordan', NULL, 32, 'male', 'Software engineer who loves cooking', ARRAY['Cooking', 'Gaming', 'Music'], '[{"id":"s2","url":"https://picsum.photos/400/500?random=2"}]'::jsonb),
+  ('00000000-0000-0000-0000-000000000003', 'Sam', NULL, 25, 'non-binary', 'Artist and dog lover', ARRAY['Art', 'Dogs', 'Photography'], '[{"id":"s3","url":"https://picsum.photos/400/500?random=3"}]'::jsonb);
 */
 
 -- =============================================================================

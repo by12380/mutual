@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCardComments } from '../hooks/useCardComments';
 import { getDisplayName } from '../lib/displayName';
+import { firstPhotoUrl } from '../lib/cardId';
 import UserProfileCards from '../components/UserProfileCards';
 import { supabase } from '../lib/supabase';
 
@@ -156,7 +157,7 @@ export default function ProfileView() {
                 <div key={`${like.swiper_id}-${like.created_at}`} className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                     <img
-                      src={like.swiper?.photos?.[0] || 'https://via.placeholder.com/32?text=?'}
+                      src={firstPhotoUrl(like.swiper?.photos, 'https://via.placeholder.com/32?text=?')}
                       alt={getDisplayName(like.swiper)}
                       className="w-full h-full object-cover"
                     />

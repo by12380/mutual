@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LocationPicker from '../components/LocationPicker';
 import { PROMPT_OPTIONS, MAX_PROMPTS, MIN_PROMPTS_SIGNUP } from '../lib/prompts';
+import { generateCardId } from '../lib/cardId';
 import { getPublicUrl, supabase } from '../lib/supabase';
 
 export default function SignUp() {
@@ -246,7 +247,7 @@ export default function SignUp() {
 
     if (data?.session && data?.user?.id && photos.length > 0) {
       try {
-        const uploadedPhotoUrls = [];
+        const uploadedPhotos = [];
 
         for (let i = 0; i < photos.length; i += 1) {
           const photo = photos[i];
@@ -264,13 +265,13 @@ export default function SignUp() {
             throw uploadError;
           }
 
-          uploadedPhotoUrls.push(getPublicUrl('avatars', filePath));
+          uploadedPhotos.push({ id: generateCardId(), url: getPublicUrl('avatars', filePath) });
         }
 
-        if (uploadedPhotoUrls.length > 0) {
+        if (uploadedPhotos.length > 0) {
           await supabase
             .from('profiles')
-            .update({ photos: uploadedPhotoUrls })
+            .update({ photos: uploadedPhotos })
             .eq('id', data.user.id);
         }
       } catch (uploadError) {
@@ -917,10 +918,10 @@ export default function SignUp() {
                           setError('');
                           if (editingPromptIndex !== null) {
                             const updated = [...prompts];
-                            updated[editingPromptIndex] = { prompt: selectedPrompt, answer: promptAnswer.trim() };
+                            updated[editingPromptIndex] = { ...updated[editingPromptIndex], prompt: selectedPrompt, answer: promptAnswer.trim() };
                             setPrompts(updated);
                           } else {
-                            setPrompts([...prompts, { prompt: selectedPrompt, answer: promptAnswer.trim() }]);
+                            setPrompts([...prompts, { id: generateCardId(), prompt: selectedPrompt, answer: promptAnswer.trim() }]);
                           }
                           setSelectedPrompt('');
                           setPromptAnswer('');

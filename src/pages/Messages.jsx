@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMatches } from '../hooks/useMatches';
 import { useAuth } from '../contexts/AuthContext';
 import { getDisplayName } from '../lib/displayName';
+import { firstPhotoUrl } from '../lib/cardId';
 
 export default function Messages() {
   const navigate = useNavigate();
@@ -142,7 +143,7 @@ function ConversationRow({ match, currentUserId, onClick, isActive, isEnded }) {
       <div className="relative flex-shrink-0">
         <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200">
           <img
-            src={otherUser?.photos?.[0] || 'https://via.placeholder.com/56?text=?'}
+            src={firstPhotoUrl(otherUser?.photos, 'https://via.placeholder.com/56?text=?')}
             alt={getDisplayName(otherUser)}
             className="w-full h-full object-cover"
           />

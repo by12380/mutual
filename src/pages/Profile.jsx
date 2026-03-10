@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
 import { INTERESTS } from '../lib/interests';
 import { PROMPT_OPTIONS, MAX_PROMPTS } from '../lib/prompts';
+import { generateCardId, migratePhotos, ensureCardIds } from '../lib/cardId';
 import LocationPicker from '../components/LocationPicker';
 
 const GENDER_OPTIONS = [
@@ -77,7 +78,7 @@ export default function Profile() {
       setGender(profile.gender || '');
       setBio(profile.bio || '');
       setInterests(profile.interests || []);
-      setPhotos(profile.photos || []);
+      setPhotos(migratePhotos(profile.photos));
       setHeight({
         feet: profile.height_feet?.toString() || '',
         inches: profile.height_inches?.toString() || '',
@@ -87,7 +88,7 @@ export default function Profile() {
       setReligionVisible(profile.religion_visible !== false);
       setPoliticalBeliefs(profile.political_beliefs || '');
       setPoliticalBeliefsVisible(profile.political_beliefs_visible !== false);
-      setPrompts(profile.prompts || []);
+      setPrompts(ensureCardIds(profile.prompts || []));
       if (profile.location) {
         setLocation({
           name: profile.location,
@@ -111,6 +112,7 @@ export default function Profile() {
       gender: gender || null,
       bio: bio.trim(),
       interests,
+      photos,
       location: location?.name || null,
       location_lat: location?.lat || null,
       location_lng: location?.lng || null,
@@ -165,7 +167,7 @@ export default function Profile() {
       return;
     }
 
-    setPhotos([...photos, url]);
+    setPhotos([...photos, { id: generateCardId(), url }]);
     setMessage({ type: 'success', text: 'Photo uploaded!' });
   };
 
@@ -175,7 +177,7 @@ export default function Profile() {
       setMessage({ type: 'error', text: error.message });
       return;
     }
-    setPhotos(photos.filter(p => p !== photoUrl));
+    setPhotos(photos.filter(p => p.url !== photoUrl));
   };
 
   const toggleInterest = (interestId) => {
@@ -220,15 +222,15 @@ export default function Profile() {
         <section className="mb-8">
           <h2 className="text-lg font-semibold mb-3">Photos</h2>
           <div className="grid grid-cols-3 gap-2">
-            {photos.map((photo, index) => (
-              <div key={index} className="relative aspect-square">
+            {photos.map((photo) => (
+              <div key={photo.id} className="relative aspect-square">
                 <img
-                  src={photo}
-                  alt={`Profile ${index + 1}`}
+                  src={photo.url}
+                  alt="Profile"
                   className="w-full h-full object-cover rounded-lg"
                 />
                 <button
-                  onClick={() => handleRemovePhoto(photo)}
+                  onClick={() => handleRemovePhoto(photo.url)}
                   className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600"
                 >
                   ×
@@ -504,10 +506,10 @@ export default function Profile() {
                     if (!promptAnswer.trim()) return;
                     if (editingPromptIndex !== null) {
                       const updated = [...prompts];
-                      updated[editingPromptIndex] = { prompt: selectedPrompt, answer: promptAnswer.trim() };
+                      updated[editingPromptIndex] = { ...updated[editingPromptIndex], prompt: selectedPrompt, answer: promptAnswer.trim() };
                       setPrompts(updated);
                     } else {
-                      setPrompts([...prompts, { prompt: selectedPrompt, answer: promptAnswer.trim() }]);
+                      setPrompts([...prompts, { id: generateCardId(), prompt: selectedPrompt, answer: promptAnswer.trim() }]);
                     }
                     setSelectedPrompt('');
                     setPromptAnswer('');

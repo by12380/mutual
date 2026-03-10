@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase, getPublicUrl } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { generateCardId, migratePhotos } from '../lib/cardId';
 
 /**
  * Custom hook for managing user profile data and operations
@@ -73,32 +74,30 @@ export function useProfile() {
   }, [user]);
 
   /**
-   * Add a photo URL to the user's photos array
+   * Add a photo URL to the user's photos array (stored as {id, url} objects)
    */
   const addPhoto = useCallback(async (photoUrl) => {
     if (!user) return { error: new Error('Not authenticated') };
 
-    // First get current photos
     const { data: profile, error: fetchError } = await supabase
       .from('profiles')
       .select('photos')
       .eq('id', user.id)
       .maybeSingle();
 
-    // If profile doesn't exist, start with empty photos array
-    const currentPhotos = profile?.photos || [];
-    
-    // Add new photo (max 6 photos)
+    const currentPhotos = migratePhotos(profile?.photos);
+
     if (currentPhotos.length >= 6) {
       return { error: new Error('Maximum 6 photos allowed') };
     }
 
-    const newPhotos = [...currentPhotos, photoUrl];
+    const newPhoto = { id: generateCardId(), url: photoUrl };
+    const newPhotos = [...currentPhotos, newPhoto];
     return updateProfile({ photos: newPhotos });
   }, [user, updateProfile]);
 
   /**
-   * Remove a photo from the user's photos array
+   * Remove a photo from the user's photos array by URL
    */
   const removePhoto = useCallback(async (photoUrl) => {
     if (!user) return { error: new Error('Not authenticated') };
@@ -109,9 +108,9 @@ export function useProfile() {
       .eq('id', user.id)
       .maybeSingle();
 
-    const currentPhotos = profile?.photos || [];
-    const newPhotos = currentPhotos.filter(p => p !== photoUrl);
-    
+    const currentPhotos = migratePhotos(profile?.photos);
+    const newPhotos = currentPhotos.filter(p => p.url !== photoUrl);
+
     return updateProfile({ photos: newPhotos });
   }, [user, updateProfile]);
 

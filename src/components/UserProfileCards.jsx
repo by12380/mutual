@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { getInterestName } from '../lib/interests';
 import { getDisplayName } from '../lib/displayName';
+import { migratePhotos, ensureCardIds, firstPhotoUrl } from '../lib/cardId';
 import CardCommentThread from './CardCommentThread';
 
 /**
@@ -59,10 +60,10 @@ export default function UserProfileCards({
     }
   };
 
-  const photos = profile?.photos?.length > 0 ? profile.photos : [];
-  const mainPhoto = photos[0];
-  const additionalPhotos = photos.slice(1);
-  const prompts = profile?.prompts || [];
+  const photoObjects = migratePhotos(profile?.photos);
+  const mainPhoto = photoObjects[0] || null;
+  const additionalPhotos = photoObjects.slice(1);
+  const prompts = ensureCardIds(profile?.prompts || []);
   const interests = profile?.interests || [];
 
   const hasDetails =
@@ -98,7 +99,7 @@ export default function UserProfileCards({
                 <div key={like.liker_id || like.liker?.id} className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                     <img
-                      src={like.liker?.photos?.[0] || 'https://via.placeholder.com/28?text=?'}
+                      src={firstPhotoUrl(like.liker?.photos, 'https://via.placeholder.com/28?text=?')}
                       alt={like.liker?.first_name || 'User'}
                       className="w-full h-full object-cover"
                     />
@@ -157,7 +158,7 @@ export default function UserProfileCards({
         {mainPhoto ? (
           <div className="relative aspect-[3/4] bg-gray-200">
             <img
-              src={mainPhoto}
+              src={mainPhoto.url}
               alt={getDisplayName(profile)}
               className="w-full h-full object-cover"
             />
@@ -251,37 +252,37 @@ export default function UserProfileCards({
       </div>
 
       {/* Additional photo cards */}
-      {additionalPhotos.map((photo, index) => {
-        const photoSectionId = `photo-${index + 2}`;
+      {additionalPhotos.map((photo) => {
+        const photoSectionId = `photo-${photo.id}`;
         return (
-          <div key={`${photo}-${index}`} className="card relative overflow-hidden">
+          <div key={photo.id} className="card relative overflow-hidden">
             <div className="aspect-[3/4] bg-gray-200">
               <img
-                src={photo}
-                alt={`${getDisplayName(profile)} photo ${index + 2}`}
+                src={photo.url}
+                alt={`${getDisplayName(profile)} photo`}
                 className="w-full h-full object-cover"
               />
             </div>
             {(cardLikesPerSection[photoSectionId]?.length > 0) && (
               <div className="px-4 pt-2 pb-1">{sectionLikesBadge(photoSectionId)}</div>
             )}
-            {sectionLikeButton(photoSectionId, `Like photo ${index + 2}`)}
+            {sectionLikeButton(photoSectionId, `Like photo`)}
             {commentThread(photoSectionId)}
           </div>
         );
       })}
 
       {/* One prompt per card */}
-      {prompts.map((prompt, index) => {
-        const promptSectionId = `prompt-${index + 1}`;
+      {prompts.map((prompt) => {
+        const promptSectionId = `prompt-${prompt.id}`;
         return (
-          <div key={`${prompt.prompt}-${index}`} className="card relative p-4 pb-14">
+          <div key={prompt.id} className="card relative p-4 pb-14">
             <p className="text-xs font-semibold text-primary-600 uppercase tracking-wide mb-2">
               {prompt.prompt}
             </p>
             <p className="text-sm text-gray-800">{prompt.answer}</p>
             <div className="mt-2">{sectionLikesBadge(promptSectionId)}</div>
-            {sectionLikeButton(promptSectionId, `Like prompt ${index + 1}`)}
+            {sectionLikeButton(promptSectionId, `Like prompt`)}
             {commentThread(promptSectionId)}
           </div>
         );

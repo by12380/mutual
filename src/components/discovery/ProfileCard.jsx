@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getInterestName } from '../../lib/interests';
 import { getDisplayName } from '../../lib/displayName';
+import { photoUrls } from '../../lib/cardId';
 
 /**
  * Profile card component for the discovery/swipe view
@@ -10,8 +11,9 @@ export default function ProfileCard({ profile, onLike, onPass }) {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [swipeAnimation, setSwipeAnimation] = useState(null);
 
-  const photos = profile.photos?.length > 0 
-    ? profile.photos 
+  const urls = photoUrls(profile.photos);
+  const photos = urls.length > 0
+    ? urls
     : ['https://via.placeholder.com/400x500?text=No+Photo'];
 
   const nextPhoto = () => {
