@@ -93,12 +93,12 @@ export function useCardComments(profileId) {
 
         const { data: existingMatch } = await supabase
           .from('matches')
-          .select('id')
+          .select('id, source')
           .eq('user1_id', orderedUser1)
           .eq('user2_id', orderedUser2)
           .maybeSingle();
 
-        if (existingMatch) return;
+        if (existingMatch) return existingMatch.id;
 
         const { data: newMatch, error: matchError } = await supabase
           .from('matches')
@@ -106,6 +106,7 @@ export function useCardComments(profileId) {
             user1_id: orderedUser1,
             user2_id: orderedUser2,
             status: 'pending',
+            source: 'comment',
           })
           .select('id')
           .single();
@@ -119,8 +120,11 @@ export function useCardComments(profileId) {
             content: commentBody,
           });
         }
+
+        return newMatch?.id ?? null;
       } catch (err) {
         console.error('Error creating conversation from comment:', err);
+        return null;
       }
     },
     [user, profileId],

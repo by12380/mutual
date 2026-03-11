@@ -186,12 +186,23 @@ export function useDiscovery() {
           const orderedUser1 = user.id < targetProfile.id ? user.id : targetProfile.id;
           const orderedUser2 = user.id < targetProfile.id ? targetProfile.id : user.id;
 
-          const { data: matchData } = await supabase
+          const { data: matchData, error: matchError } = await supabase
             .from('matches')
-            .select('id')
+            .select('id, source')
             .eq('user1_id', orderedUser1)
             .eq('user2_id', orderedUser2)
-            .single();
+            .maybeSingle();
+
+          if (matchError) throw matchError;
+
+          if (matchData?.source === 'comment') {
+            const { error: promoteError } = await supabase
+              .from('matches')
+              .update({ source: 'swipe' })
+              .eq('id', matchData.id);
+
+            if (promoteError) throw promoteError;
+          }
 
           matchId = matchData?.id || null;
         }

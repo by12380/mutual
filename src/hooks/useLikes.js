@@ -275,12 +275,23 @@ export function useLikes() {
           const orderedUser1 = user.id < targetId ? user.id : targetId;
           const orderedUser2 = user.id < targetId ? targetId : user.id;
 
-          const { data: matchData } = await supabase
+          const { data: matchData, error: matchError } = await supabase
             .from('matches')
-            .select('id')
+            .select('id, source')
             .eq('user1_id', orderedUser1)
             .eq('user2_id', orderedUser2)
-            .single();
+            .maybeSingle();
+
+          if (matchError) throw matchError;
+
+          if (matchData?.source === 'comment') {
+            const { error: promoteError } = await supabase
+              .from('matches')
+              .update({ source: 'swipe' })
+              .eq('id', matchData.id);
+
+            if (promoteError) throw promoteError;
+          }
 
           matched = !!matchData;
           matchId = matchData?.id || null;

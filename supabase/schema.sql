@@ -110,14 +110,13 @@ CREATE INDEX IF NOT EXISTS idx_profile_card_comments_commenter
   ON public.profile_card_comments(commenter_id);
 
 -- -----------------------------------------------------------------------------
--- MATCHES TABLE
--- Created when two users mutually like each other.
--- Stores the conversation state between matched users.
+-- Stores both swipe-created matches and comment-started conversations.
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.matches (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user1_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   user2_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  source TEXT NOT NULL DEFAULT 'swipe' CHECK (source IN ('swipe', 'comment')),
   -- Status: pending (new match), active (chatting), ended (conversation closed)
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'ended')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -130,6 +129,7 @@ CREATE TABLE IF NOT EXISTS public.matches (
 -- Indexes for efficient match queries
 CREATE INDEX IF NOT EXISTS idx_matches_user1_id ON public.matches(user1_id);
 CREATE INDEX IF NOT EXISTS idx_matches_user2_id ON public.matches(user2_id);
+CREATE INDEX IF NOT EXISTS idx_matches_source ON public.matches(source);
 CREATE INDEX IF NOT EXISTS idx_matches_status ON public.matches(status);
 CREATE INDEX IF NOT EXISTS idx_matches_updated_at ON public.matches(updated_at DESC);
 

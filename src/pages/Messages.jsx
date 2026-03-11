@@ -66,7 +66,7 @@ export default function Messages() {
             </svg>
           </div>
           <h2 className="text-lg font-semibold text-gray-700 mb-2">No messages yet</h2>
-          <p className="text-gray-500 mb-4">Match with someone or comment on a profile to start chatting!</p>
+          <p className="text-gray-500 mb-4">Swipe right for a match, or comment on a profile to start chatting.</p>
           <button onClick={() => navigate('/discover')} className="btn-primary">
             Start Discovering
           </button>

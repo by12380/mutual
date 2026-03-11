@@ -47,16 +47,17 @@ export default function Matches() {
     );
   }
 
-  // Filter matches by status
-  const activeMatches = matches.filter(m => m.status === 'active');
-  const pendingMatches = matches.filter(m => m.status === 'pending');
-  const endedMatches = matches.filter(m => m.status === 'ended');
+  // Only true swipe matches belong on this screen.
+  const swipeMatches = matches.filter(match => match.source !== 'comment');
+  const activeMatches = swipeMatches.filter(m => m.status === 'active');
+  const pendingMatches = swipeMatches.filter(m => m.status === 'pending');
+  const endedMatches = swipeMatches.filter(m => m.status === 'ended');
 
   return (
     <div className="p-4 pb-20">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Matches</h1>
 
-      {matches.length === 0 ? (
+      {swipeMatches.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-primary-200 mb-4">
             <svg className="w-20 h-20 mx-auto" fill="currentColor" viewBox="0 0 24 24">
