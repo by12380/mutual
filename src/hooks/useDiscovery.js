@@ -1,13 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { haversineDistance } from '../lib/geo';
 
 /**
  * Custom hook for the discovery/swipe feature
  * Handles fetching potential matches and recording swipes
+ *
+ * @param {Object} options
+ * @param {number|null} options.maxDistance - Maximum distance in miles (null = no filter)
  */
-export function useDiscovery() {
-  const { user } = useAuth();
+export function useDiscovery({ maxDistance = null } = {}) {
+  const { user, profile: myProfile } = useAuth();
   const [profiles, setProfiles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [likedSections, setLikedSections] = useState({});
@@ -16,7 +20,8 @@ export function useDiscovery() {
   const currentProfile = profiles[currentIndex] || null;
 
   /**
-   * Fetch profiles that the user hasn't swiped on yet
+   * Fetch profiles that the user hasn't swiped on yet,
+   * optionally filtered by distance and sorted nearest-first.
    */
   const fetchProfiles = useCallback(async () => {
     if (!user) return;
@@ -25,30 +30,47 @@ export function useDiscovery() {
     setError(null);
 
     try {
-      // Get IDs of users we've already swiped on
       const { data: swipedData } = await supabase
         .from('swipes')
         .select('swiped_id')
         .eq('swiper_id', user.id);
 
       const swipedIds = swipedData?.map(s => s.swiped_id) || [];
-      
-      // Add current user to exclusion list
       const excludeIds = [user.id, ...swipedIds];
 
-      // Fetch profiles we haven't swiped on
-      // Only show profiles that have completed their profile (have a name)
       const { data: profilesData, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
         .not('id', 'in', `(${excludeIds.join(',')})`)
         .not('first_name', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (fetchError) throw fetchError;
 
-      setProfiles(profilesData || []);
+      let results = profilesData || [];
+
+      const myLat = myProfile?.location_lat;
+      const myLng = myProfile?.location_lng;
+
+      if (maxDistance != null && myLat != null && myLng != null) {
+        results = results
+          .map((p) => ({
+            ...p,
+            _distance: haversineDistance(myLat, myLng, p.location_lat, p.location_lng),
+          }))
+          .filter((p) => p._distance <= maxDistance)
+          .sort((a, b) => a._distance - b._distance);
+      } else if (myLat != null && myLng != null) {
+        results = results
+          .map((p) => ({
+            ...p,
+            _distance: haversineDistance(myLat, myLng, p.location_lat, p.location_lng),
+          }))
+          .sort((a, b) => a._distance - b._distance);
+      }
+
+      setProfiles(results);
       setCurrentIndex(0);
       setLikedSections({});
     } catch (err) {
@@ -57,9 +79,9 @@ export function useDiscovery() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, myProfile?.location_lat, myProfile?.location_lng, maxDistance]);
 
-  // Fetch profiles on mount
+  // Fetch profiles on mount and when filters change
   useEffect(() => {
     fetchProfiles();
   }, [fetchProfiles]);

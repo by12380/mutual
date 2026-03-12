@@ -4,9 +4,11 @@ import { useCardComments } from '../hooks/useCardComments';
 import { useAuth } from '../contexts/AuthContext';
 import UserProfileCards from '../components/UserProfileCards';
 import MatchModal from '../components/discovery/MatchModal';
+import LocationFilter from '../components/discovery/LocationFilter';
 
 export default function Discover() {
-  const { user } = useAuth();
+  const { user, profile: myProfile } = useAuth();
+  const [maxDistance, setMaxDistance] = useState(null);
   const {
     currentProfile,
     hasMore,
@@ -18,7 +20,7 @@ export default function Discover() {
     toggleSectionLike,
     refresh,
     remainingCount,
-  } = useDiscovery();
+  } = useDiscovery({ maxDistance });
   const {
     commentsBySection,
     addComment,
@@ -76,19 +78,35 @@ export default function Discover() {
 
   if (!hasMore || !currentProfile) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
-        <div className="text-primary-300 mb-4">
-          <svg className="w-24 h-24 mx-auto" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-          </svg>
+      <div className="max-w-sm mx-auto">
+        <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+          <h1 className="text-lg font-bold text-gray-900">Discover</h1>
         </div>
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">You've seen everyone!</h2>
-        <p className="text-gray-500 text-center mb-4">
-          Check back later for new people in your area
-        </p>
-        <button onClick={refresh} className="btn-outline">
-          Refresh
-        </button>
+        <div className="px-4 pb-2 flex items-center gap-2">
+          <LocationFilter
+            value={maxDistance}
+            onChange={setMaxDistance}
+            hasLocation={!!(myProfile?.location_lat && myProfile?.location_lng)}
+          />
+        </div>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
+          <div className="text-primary-300 mb-4">
+            <svg className="w-24 h-24 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            {maxDistance != null ? 'No one nearby' : "You've seen everyone!"}
+          </h2>
+          <p className="text-gray-500 text-center mb-4">
+            {maxDistance != null
+              ? `Try increasing your distance or clearing the filter`
+              : 'Check back later for new people in your area'}
+          </p>
+          <button onClick={refresh} className="btn-outline">
+            Refresh
+          </button>
+        </div>
       </div>
     );
   }
@@ -99,6 +117,15 @@ export default function Discover() {
       <div className="px-4 pt-4 pb-2 flex items-center justify-between">
         <h1 className="text-lg font-bold text-gray-900">Discover</h1>
         <span className="text-sm text-gray-500">{remainingCount} left</span>
+      </div>
+
+      {/* Filters */}
+      <div className="px-4 pb-2 flex items-center gap-2">
+        <LocationFilter
+          value={maxDistance}
+          onChange={setMaxDistance}
+          hasLocation={!!(myProfile?.location_lat && myProfile?.location_lng)}
+        />
       </div>
 
       <div className="px-4">
