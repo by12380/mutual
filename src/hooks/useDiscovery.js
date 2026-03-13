@@ -9,8 +9,9 @@ import { haversineDistance } from '../lib/geo';
  *
  * @param {Object} options
  * @param {number|null} options.maxDistance - Maximum distance in miles (null = no filter)
+ * @param {[number, number]|null} options.ageRange - [minAge, maxAge] filter (null = no filter)
  */
-export function useDiscovery({ maxDistance = null } = {}) {
+export function useDiscovery({ maxDistance = null, ageRange = null } = {}) {
   const { user, profile: myProfile } = useAuth();
   const [profiles, setProfiles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -70,6 +71,13 @@ export function useDiscovery({ maxDistance = null } = {}) {
           .sort((a, b) => a._distance - b._distance);
       }
 
+      if (ageRange != null) {
+        const [minAge, maxAge] = ageRange;
+        results = results.filter(
+          (p) => p.age != null && p.age >= minAge && p.age <= maxAge,
+        );
+      }
+
       setProfiles(results);
       setCurrentIndex(0);
       setLikedSections({});
@@ -79,7 +87,8 @@ export function useDiscovery({ maxDistance = null } = {}) {
     } finally {
       setLoading(false);
     }
-  }, [user, myProfile?.location_lat, myProfile?.location_lng, maxDistance]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, myProfile?.location_lat, myProfile?.location_lng, maxDistance, ageRange?.[0], ageRange?.[1]]);
 
   // Fetch profiles on mount and when filters change
   useEffect(() => {

@@ -5,10 +5,12 @@ import { useAuth } from '../contexts/AuthContext';
 import UserProfileCards from '../components/UserProfileCards';
 import MatchModal from '../components/discovery/MatchModal';
 import LocationFilter from '../components/discovery/LocationFilter';
+import AgeFilter from '../components/discovery/AgeFilter';
 
 export default function Discover() {
   const { user, profile: myProfile } = useAuth();
   const [maxDistance, setMaxDistance] = useState(null);
+  const [ageRange, setAgeRange] = useState(null);
   const {
     currentProfile,
     hasMore,
@@ -20,7 +22,7 @@ export default function Discover() {
     toggleSectionLike,
     refresh,
     remainingCount,
-  } = useDiscovery({ maxDistance });
+  } = useDiscovery({ maxDistance, ageRange });
   const {
     commentsBySection,
     addComment,
@@ -88,6 +90,7 @@ export default function Discover() {
             onChange={setMaxDistance}
             hasLocation={!!(myProfile?.location_lat && myProfile?.location_lng)}
           />
+          <AgeFilter value={ageRange} onChange={setAgeRange} />
         </div>
         <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
           <div className="text-primary-300 mb-4">
@@ -96,11 +99,11 @@ export default function Discover() {
             </svg>
           </div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            {maxDistance != null ? 'No one nearby' : "You've seen everyone!"}
+            {maxDistance != null || ageRange != null ? 'No one matches your filters' : "You've seen everyone!"}
           </h2>
           <p className="text-gray-500 text-center mb-4">
-            {maxDistance != null
-              ? `Try increasing your distance or clearing the filter`
+            {maxDistance != null || ageRange != null
+              ? 'Try adjusting your filters'
               : 'Check back later for new people in your area'}
           </p>
           <button onClick={refresh} className="btn-outline">
@@ -126,6 +129,7 @@ export default function Discover() {
           onChange={setMaxDistance}
           hasLocation={!!(myProfile?.location_lat && myProfile?.location_lng)}
         />
+        <AgeFilter value={ageRange} onChange={setAgeRange} />
       </div>
 
       <div className="px-4">
