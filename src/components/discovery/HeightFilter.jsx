@@ -1,24 +1,30 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
-const MIN_AGE = 18;
-const MAX_AGE = 65;
+const MIN_INCHES = 48;  // 4'0"
+const MAX_INCHES = 84;  // 7'0"
+
+function inchesToLabel(totalInches) {
+  const feet = Math.floor(totalInches / 12);
+  const inches = totalInches % 12;
+  return `${feet}'${inches}"`;
+}
 
 /**
- * Pill button that opens a popover with a dual-thumb range slider for age filtering.
+ * Pill button that opens a popover with a dual-thumb range slider for height filtering.
  *
  * Props:
- * - value: [number, number] | null  (current [minAge, maxAge], null = off)
+ * - value: [number, number] | null  (current [minInches, maxInches], null = off)
  * - onChange: (range: [number, number] | null) => void
  */
-export default function AgeFilter({ value, onChange }) {
+export default function HeightFilter({ value, onChange }) {
   const [open, setOpen] = useState(false);
-  const [localMin, setLocalMin] = useState(value?.[0] ?? MIN_AGE);
-  const [localMax, setLocalMax] = useState(value?.[1] ?? MAX_AGE);
+  const [localMin, setLocalMin] = useState(value?.[0] ?? MIN_INCHES);
+  const [localMax, setLocalMax] = useState(value?.[1] ?? MAX_INCHES);
   const ref = useRef(null);
 
   useEffect(() => {
-    setLocalMin(value?.[0] ?? MIN_AGE);
-    setLocalMax(value?.[1] ?? MAX_AGE);
+    setLocalMin(value?.[0] ?? MIN_INCHES);
+    setLocalMax(value?.[1] ?? MAX_INCHES);
   }, [value]);
 
   useEffect(() => {
@@ -34,7 +40,7 @@ export default function AgeFilter({ value, onChange }) {
   }, [open]);
 
   const handleApply = () => {
-    if (localMin === MIN_AGE && localMax === MAX_AGE) {
+    if (localMin === MIN_INCHES && localMax === MAX_INCHES) {
       onChange(null);
     } else {
       onChange([localMin, localMax]);
@@ -44,14 +50,16 @@ export default function AgeFilter({ value, onChange }) {
 
   const handleClear = () => {
     onChange(null);
-    setLocalMin(MIN_AGE);
-    setLocalMax(MAX_AGE);
+    setLocalMin(MIN_INCHES);
+    setLocalMax(MAX_INCHES);
     setOpen(false);
   };
 
   const active = value != null;
 
-  const label = active ? `${value[0]}–${value[1]}` : 'Age';
+  const label = active
+    ? `${inchesToLabel(value[0])} – ${inchesToLabel(value[1])}`
+    : 'Height';
 
   return (
     <div className="relative inline-block flex-shrink-0" ref={ref}>
@@ -64,17 +72,12 @@ export default function AgeFilter({ value, onChange }) {
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
         }`}
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-          />
+        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7l4-4m0 0l4 4m-4-4v18" />
         </svg>
         {label}
         <svg
-          className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`w-3.5 h-3.5 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -87,17 +90,17 @@ export default function AgeFilter({ value, onChange }) {
         <div className="absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 z-50 animate-fade-in overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-              Age Range
+              Height Range
             </p>
             <p className="text-lg font-semibold text-gray-900">
-              {localMin} – {localMax}{localMax === MAX_AGE ? '+' : ''}
+              {inchesToLabel(localMin)} – {inchesToLabel(localMax)}{localMax === MAX_INCHES ? '+' : ''}
             </p>
           </div>
 
           <div className="px-4 pb-4">
             <RangeSlider
-              min={MIN_AGE}
-              max={MAX_AGE}
+              min={MIN_INCHES}
+              max={MAX_INCHES}
               valueMin={localMin}
               valueMax={localMax}
               onChangeMin={setLocalMin}
@@ -131,10 +134,6 @@ export default function AgeFilter({ value, onChange }) {
   );
 }
 
-/**
- * Dual-thumb range slider built with two native <input type="range"> elements
- * layered on top of each other. The filled track is drawn with a gradient.
- */
 function RangeSlider({ min, max, valueMin, valueMax, onChangeMin, onChangeMax }) {
   const trackRef = useRef(null);
 
@@ -148,9 +147,7 @@ function RangeSlider({ min, max, valueMin, valueMax, onChangeMin, onChangeMax })
 
   return (
     <div className="relative h-8 flex items-center">
-      {/* Background track */}
       <div className="absolute w-full h-1.5 rounded-full bg-gray-200" />
-      {/* Active track */}
       <div
         ref={trackRef}
         className="absolute h-1.5 rounded-full bg-primary-500"

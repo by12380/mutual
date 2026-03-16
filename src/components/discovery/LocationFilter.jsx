@@ -29,11 +29,11 @@ export default function LocationFilter({ value, onChange, hasLocation }) {
   const active = value != null;
 
   return (
-    <div className="relative inline-block" ref={ref}>
+    <div className="relative inline-block flex-shrink-0" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
           active
             ? 'bg-primary-500 text-white'
             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
