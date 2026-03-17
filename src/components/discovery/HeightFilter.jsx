@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { useAnchoredPopover } from '../../hooks/useAnchoredPopover';
 
 const MIN_INCHES = 48;  // 4'0"
 const MAX_INCHES = 84;  // 7'0"
@@ -20,7 +22,8 @@ export default function HeightFilter({ value, onChange }) {
   const [open, setOpen] = useState(false);
   const [localMin, setLocalMin] = useState(value?.[0] ?? MIN_INCHES);
   const [localMax, setLocalMax] = useState(value?.[1] ?? MAX_INCHES);
-  const ref = useRef(null);
+  const containerRef = useRef(null);
+  const { anchorRef, popoverRef, popoverStyle } = useAnchoredPopover(open, { width: 256 });
 
   useEffect(() => {
     setLocalMin(value?.[0] ?? MIN_INCHES);
@@ -29,7 +32,10 @@ export default function HeightFilter({ value, onChange }) {
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) {
+      const clickedTrigger = containerRef.current?.contains(e.target);
+      const clickedPopover = popoverRef.current?.contains(e.target);
+
+      if (!clickedTrigger && !clickedPopover) {
         setOpen(false);
       }
     }
@@ -62,8 +68,9 @@ export default function HeightFilter({ value, onChange }) {
     : 'Height';
 
   return (
-    <div className="relative inline-block flex-shrink-0" ref={ref}>
+    <div className="relative inline-block flex-shrink-0" ref={containerRef}>
       <button
+        ref={anchorRef}
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
@@ -86,8 +93,12 @@ export default function HeightFilter({ value, onChange }) {
         </svg>
       </button>
 
-      {open && (
-        <div className="absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 z-50 animate-fade-in overflow-hidden">
+      {open && createPortal(
+        <div
+          ref={popoverRef}
+          style={popoverStyle}
+          className="w-64 bg-white rounded-xl shadow-lg border border-gray-200 animate-fade-in overflow-y-auto"
+        >
           <div className="px-4 pt-4 pb-2">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
               Height Range
@@ -128,7 +139,8 @@ export default function HeightFilter({ value, onChange }) {
               Apply
             </button>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

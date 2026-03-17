@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useAnchoredPopover } from '../../hooks/useAnchoredPopover';
 
 const DISTANCE_OPTIONS = [5, 10, 25, 50, 100, 250];
 
@@ -12,11 +14,15 @@ const DISTANCE_OPTIONS = [5, 10, 25, 50, 100, 250];
  */
 export default function LocationFilter({ value, onChange, hasLocation }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const containerRef = useRef(null);
+  const { anchorRef, popoverRef, popoverStyle } = useAnchoredPopover(open, { width: 224 });
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) {
+      const clickedTrigger = containerRef.current?.contains(e.target);
+      const clickedPopover = popoverRef.current?.contains(e.target);
+
+      if (!clickedTrigger && !clickedPopover) {
         setOpen(false);
       }
     }
@@ -29,8 +35,9 @@ export default function LocationFilter({ value, onChange, hasLocation }) {
   const active = value != null;
 
   return (
-    <div className="relative inline-block flex-shrink-0" ref={ref}>
+    <div className="relative inline-block flex-shrink-0" ref={containerRef}>
       <button
+        ref={anchorRef}
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
@@ -64,8 +71,12 @@ export default function LocationFilter({ value, onChange, hasLocation }) {
         </svg>
       </button>
 
-      {open && (
-        <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 z-50 animate-fade-in overflow-hidden">
+      {open && createPortal(
+        <div
+          ref={popoverRef}
+          style={popoverStyle}
+          className="w-56 bg-white rounded-xl shadow-lg border border-gray-200 animate-fade-in overflow-y-auto"
+        >
           {!hasLocation ? (
             <div className="p-4 text-sm text-gray-500 text-center">
               <svg className="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,7 +132,8 @@ export default function LocationFilter({ value, onChange, hasLocation }) {
               )}
             </>
           )}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

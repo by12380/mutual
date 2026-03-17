@@ -86,14 +86,16 @@ export default function Discover() {
         <div className="px-4 pt-4 pb-2 flex items-center justify-between">
           <h1 className="text-lg font-bold text-gray-900">Discover</h1>
         </div>
-        <div className="px-4 pb-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
-          <LocationFilter
-            value={maxDistance}
-            onChange={setMaxDistance}
-            hasLocation={!!(myProfile?.location_lat && myProfile?.location_lng)}
-          />
-          <AgeFilter value={ageRange} onChange={setAgeRange} />
-          <HeightFilter value={heightRange} onChange={setHeightRange} />
+        <div className="px-4 pb-2 overflow-x-auto scrollbar-hide">
+          <div className="flex w-max min-w-full flex-nowrap items-center gap-2">
+            <LocationFilter
+              value={maxDistance}
+              onChange={setMaxDistance}
+              hasLocation={!!(myProfile?.location_lat && myProfile?.location_lng)}
+            />
+            <AgeFilter value={ageRange} onChange={setAgeRange} />
+            <HeightFilter value={heightRange} onChange={setHeightRange} />
+          </div>
         </div>
         <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
           <div className="text-primary-300 mb-4">
@@ -126,14 +128,16 @@ export default function Discover() {
       </div>
 
       {/* Filters */}
-      <div className="px-4 pb-2 flex items-center gap-2 overflow-x-auto scrollbar-hide">
-        <LocationFilter
-          value={maxDistance}
-          onChange={setMaxDistance}
-          hasLocation={!!(myProfile?.location_lat && myProfile?.location_lng)}
-        />
-        <AgeFilter value={ageRange} onChange={setAgeRange} />
-        <HeightFilter value={heightRange} onChange={setHeightRange} />
+      <div className="px-4 pb-2 overflow-x-auto scrollbar-hide">
+        <div className="flex w-max min-w-full flex-nowrap items-center gap-2">
+          <LocationFilter
+            value={maxDistance}
+            onChange={setMaxDistance}
+            hasLocation={!!(myProfile?.location_lat && myProfile?.location_lng)}
+          />
+          <AgeFilter value={ageRange} onChange={setAgeRange} />
+          <HeightFilter value={heightRange} onChange={setHeightRange} />
+        </div>
       </div>
 
       <div className="px-4">
