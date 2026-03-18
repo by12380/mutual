@@ -11,8 +11,14 @@ import { haversineDistance } from '../lib/geo';
  * @param {number|null} options.maxDistance - Maximum distance in miles (null = no filter)
  * @param {[number, number]|null} options.ageRange - [minAge, maxAge] filter (null = no filter)
  * @param {[number, number]|null} options.heightRange - [minInches, maxInches] filter (null = no filter)
+ * @param {string[]|null} options.genders - Gender values to include (null = no filter)
  */
-export function useDiscovery({ maxDistance = null, ageRange = null, heightRange = null } = {}) {
+export function useDiscovery({
+  maxDistance = null,
+  ageRange = null,
+  heightRange = null,
+  genders = null,
+} = {}) {
   const { user, profile: myProfile } = useAuth();
   const [profiles, setProfiles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -88,6 +94,10 @@ export function useDiscovery({ maxDistance = null, ageRange = null, heightRange 
         });
       }
 
+      if (genders != null && genders.length > 0) {
+        results = results.filter((p) => p.gender != null && genders.includes(p.gender));
+      }
+
       setProfiles(results);
       setCurrentIndex(0);
       setLikedSections({});
@@ -98,7 +108,17 @@ export function useDiscovery({ maxDistance = null, ageRange = null, heightRange 
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, myProfile?.location_lat, myProfile?.location_lng, maxDistance, ageRange?.[0], ageRange?.[1], heightRange?.[0], heightRange?.[1]]);
+  }, [
+    user,
+    myProfile?.location_lat,
+    myProfile?.location_lng,
+    maxDistance,
+    ageRange?.[0],
+    ageRange?.[1],
+    heightRange?.[0],
+    heightRange?.[1],
+    genders?.join(','),
+  ]);
 
   // Fetch profiles on mount and when filters change
   useEffect(() => {

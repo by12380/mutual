@@ -7,12 +7,14 @@ import MatchModal from '../components/discovery/MatchModal';
 import LocationFilter from '../components/discovery/LocationFilter';
 import AgeFilter from '../components/discovery/AgeFilter';
 import HeightFilter from '../components/discovery/HeightFilter';
+import GenderFilter from '../components/discovery/GenderFilter';
 
 export default function Discover() {
   const { user, profile: myProfile } = useAuth();
   const [maxDistance, setMaxDistance] = useState(null);
   const [ageRange, setAgeRange] = useState(null);
   const [heightRange, setHeightRange] = useState(null);
+  const [selectedGenders, setSelectedGenders] = useState(null);
   const {
     currentProfile,
     hasMore,
@@ -24,7 +26,7 @@ export default function Discover() {
     toggleSectionLike,
     refresh,
     remainingCount,
-  } = useDiscovery({ maxDistance, ageRange, heightRange });
+  } = useDiscovery({ maxDistance, ageRange, heightRange, genders: selectedGenders });
   const {
     commentsBySection,
     addComment,
@@ -53,6 +55,13 @@ export default function Discover() {
     setMatchedProfile(null);
     setMatchId(null);
   };
+
+  const hasActiveFilters = (
+    maxDistance != null
+    || ageRange != null
+    || heightRange != null
+    || selectedGenders != null
+  );
 
   if (loading) {
     return (
@@ -95,6 +104,7 @@ export default function Discover() {
             />
             <AgeFilter value={ageRange} onChange={setAgeRange} />
             <HeightFilter value={heightRange} onChange={setHeightRange} />
+            <GenderFilter value={selectedGenders} onChange={setSelectedGenders} />
           </div>
         </div>
         <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
@@ -104,10 +114,10 @@ export default function Discover() {
             </svg>
           </div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            {maxDistance != null || ageRange != null || heightRange != null ? 'No one matches your filters' : "You've seen everyone!"}
+            {hasActiveFilters ? 'No one matches your filters' : "You've seen everyone!"}
           </h2>
           <p className="text-gray-500 text-center mb-4">
-            {maxDistance != null || ageRange != null || heightRange != null
+            {hasActiveFilters
               ? 'Try adjusting your filters'
               : 'Check back later for new people in your area'}
           </p>
@@ -137,6 +147,7 @@ export default function Discover() {
           />
           <AgeFilter value={ageRange} onChange={setAgeRange} />
           <HeightFilter value={heightRange} onChange={setHeightRange} />
+          <GenderFilter value={selectedGenders} onChange={setSelectedGenders} />
         </div>
       </div>
 
