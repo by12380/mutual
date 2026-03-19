@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LocationPicker from '../components/LocationPicker';
 import { PROMPT_OPTIONS, MAX_PROMPTS, MIN_PROMPTS_SIGNUP } from '../lib/prompts';
+import { RELIGION_OPTIONS } from '../lib/profileOptions';
 import { generateCardId } from '../lib/cardId';
 import { getPublicUrl, supabase } from '../lib/supabase';
 
@@ -45,20 +46,6 @@ export default function SignUp() {
     { value: 'female', label: 'Female' },
     { value: 'non-binary', label: 'Non-binary' },
     { value: 'other', label: 'Other' },
-  ];
-
-  const religionOptions = [
-    'Christianity',
-    'Islam',
-    'Judaism',
-    'Hinduism',
-    'Buddhism',
-    'Sikhism',
-    'Spiritual',
-    'Agnostic',
-    'Atheist',
-    'Other',
-    'Prefer not to say',
   ];
 
   const politicalOptions = [
@@ -695,7 +682,7 @@ export default function SignUp() {
                   Optional. Select the religion that best describes you.
                 </p>
                 <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                  {religionOptions.map((option) => (
+                  {RELIGION_OPTIONS.map((option) => (
                     <label
                       key={option}
                       className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${

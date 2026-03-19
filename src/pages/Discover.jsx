@@ -8,6 +8,7 @@ import LocationFilter from '../components/discovery/LocationFilter';
 import AgeFilter from '../components/discovery/AgeFilter';
 import HeightFilter from '../components/discovery/HeightFilter';
 import GenderFilter from '../components/discovery/GenderFilter';
+import ReligionFilter from '../components/discovery/ReligionFilter';
 
 export default function Discover() {
   const { user, profile: myProfile } = useAuth();
@@ -15,6 +16,7 @@ export default function Discover() {
   const [ageRange, setAgeRange] = useState(null);
   const [heightRange, setHeightRange] = useState(null);
   const [selectedGenders, setSelectedGenders] = useState(null);
+  const [selectedReligions, setSelectedReligions] = useState(null);
   const {
     currentProfile,
     hasMore,
@@ -26,7 +28,13 @@ export default function Discover() {
     toggleSectionLike,
     refresh,
     remainingCount,
-  } = useDiscovery({ maxDistance, ageRange, heightRange, genders: selectedGenders });
+  } = useDiscovery({
+    maxDistance,
+    ageRange,
+    heightRange,
+    genders: selectedGenders,
+    religions: selectedReligions,
+  });
   const {
     commentsBySection,
     addComment,
@@ -61,6 +69,7 @@ export default function Discover() {
     || ageRange != null
     || heightRange != null
     || selectedGenders != null
+    || selectedReligions != null
   );
 
   if (loading) {
@@ -105,6 +114,7 @@ export default function Discover() {
             <AgeFilter value={ageRange} onChange={setAgeRange} />
             <HeightFilter value={heightRange} onChange={setHeightRange} />
             <GenderFilter value={selectedGenders} onChange={setSelectedGenders} />
+            <ReligionFilter value={selectedReligions} onChange={setSelectedReligions} />
           </div>
         </div>
         <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
@@ -148,6 +158,7 @@ export default function Discover() {
           <AgeFilter value={ageRange} onChange={setAgeRange} />
           <HeightFilter value={heightRange} onChange={setHeightRange} />
           <GenderFilter value={selectedGenders} onChange={setSelectedGenders} />
+          <ReligionFilter value={selectedReligions} onChange={setSelectedReligions} />
         </div>
       </div>
 
