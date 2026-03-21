@@ -9,6 +9,7 @@ import AgeFilter from '../components/discovery/AgeFilter';
 import HeightFilter from '../components/discovery/HeightFilter';
 import GenderFilter from '../components/discovery/GenderFilter';
 import ReligionFilter from '../components/discovery/ReligionFilter';
+import PoliticalBeliefsFilter from '../components/discovery/PoliticalBeliefsFilter';
 
 export default function Discover() {
   const { user, profile: myProfile } = useAuth();
@@ -17,6 +18,7 @@ export default function Discover() {
   const [heightRange, setHeightRange] = useState(null);
   const [selectedGenders, setSelectedGenders] = useState(null);
   const [selectedReligions, setSelectedReligions] = useState(null);
+  const [selectedPoliticalBeliefs, setSelectedPoliticalBeliefs] = useState(null);
   const {
     currentProfile,
     hasMore,
@@ -34,6 +36,7 @@ export default function Discover() {
     heightRange,
     genders: selectedGenders,
     religions: selectedReligions,
+    politicalBeliefs: selectedPoliticalBeliefs,
   });
   const {
     commentsBySection,
@@ -70,6 +73,7 @@ export default function Discover() {
     || heightRange != null
     || selectedGenders != null
     || selectedReligions != null
+    || selectedPoliticalBeliefs != null
   );
 
   if (loading) {
@@ -115,6 +119,10 @@ export default function Discover() {
             <HeightFilter value={heightRange} onChange={setHeightRange} />
             <GenderFilter value={selectedGenders} onChange={setSelectedGenders} />
             <ReligionFilter value={selectedReligions} onChange={setSelectedReligions} />
+            <PoliticalBeliefsFilter
+              value={selectedPoliticalBeliefs}
+              onChange={setSelectedPoliticalBeliefs}
+            />
           </div>
         </div>
         <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
@@ -159,6 +167,10 @@ export default function Discover() {
           <HeightFilter value={heightRange} onChange={setHeightRange} />
           <GenderFilter value={selectedGenders} onChange={setSelectedGenders} />
           <ReligionFilter value={selectedReligions} onChange={setSelectedReligions} />
+          <PoliticalBeliefsFilter
+            value={selectedPoliticalBeliefs}
+            onChange={setSelectedPoliticalBeliefs}
+          />
         </div>
       </div>
 

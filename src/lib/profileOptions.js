@@ -11,3 +11,14 @@ export const RELIGION_OPTIONS = [
   'Other',
   'Prefer not to say',
 ];
+
+export const POLITICAL_BELIEF_OPTIONS = [
+  'Liberal',
+  'Conservative',
+  'Moderate',
+  'Libertarian',
+  'Progressive',
+  'Apolitical',
+  'Other',
+  'Prefer not to say',
+];

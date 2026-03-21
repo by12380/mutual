@@ -13,6 +13,7 @@ import { haversineDistance } from '../lib/geo';
  * @param {[number, number]|null} options.heightRange - [minInches, maxInches] filter (null = no filter)
  * @param {string[]|null} options.genders - Gender values to include (null = no filter)
  * @param {string[]|null} options.religions - Religion values to include (null = no filter)
+ * @param {string[]|null} options.politicalBeliefs - Political belief values to include (null = no filter)
  */
 export function useDiscovery({
   maxDistance = null,
@@ -20,6 +21,7 @@ export function useDiscovery({
   heightRange = null,
   genders = null,
   religions = null,
+  politicalBeliefs = null,
 } = {}) {
   const { user, profile: myProfile } = useAuth();
   const [profiles, setProfiles] = useState([]);
@@ -104,6 +106,12 @@ export function useDiscovery({
         results = results.filter((p) => p.religion != null && religions.includes(p.religion));
       }
 
+      if (politicalBeliefs != null && politicalBeliefs.length > 0) {
+        results = results.filter(
+          (p) => p.political_beliefs != null && politicalBeliefs.includes(p.political_beliefs),
+        );
+      }
+
       setProfiles(results);
       setCurrentIndex(0);
       setLikedSections({});
@@ -125,6 +133,7 @@ export function useDiscovery({
     heightRange?.[1],
     genders?.join(','),
     religions?.join(','),
+    politicalBeliefs?.join(','),
   ]);
 
   // Fetch profiles on mount and when filters change
