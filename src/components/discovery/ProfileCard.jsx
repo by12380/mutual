@@ -115,6 +115,7 @@ export default function ProfileCard({ profile, onLike, onPass }) {
         {(
           (profile.height_feet && profile.height_visible !== false) ||
           (profile.religion && profile.religion_visible !== false) ||
+          (profile.ethnicity && profile.ethnicity_visible !== false) ||
           (profile.political_beliefs && profile.political_beliefs_visible !== false)
         ) && (
           <div className="flex flex-wrap gap-2 mb-3">
@@ -129,6 +130,11 @@ export default function ProfileCard({ profile, onLike, onPass }) {
             {profile.religion && profile.religion_visible !== false && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
                 {profile.religion}
+              </span>
+            )}
+            {profile.ethnicity && profile.ethnicity_visible !== false && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                {profile.ethnicity}
               </span>
             )}
             {profile.political_beliefs && profile.political_beliefs_visible !== false && (

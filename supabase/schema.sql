@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   -- Religion & political beliefs
   religion TEXT,
   religion_visible BOOLEAN DEFAULT TRUE,
+  ethnicity TEXT,
+  ethnicity_visible BOOLEAN DEFAULT TRUE,
   political_beliefs TEXT,
   political_beliefs_visible BOOLEAN DEFAULT TRUE,
   -- Prompts: array of {id, prompt, answer} objects (id for stable card identity)
@@ -187,6 +189,7 @@ BEGIN
     id, email, first_name, last_name, age, gender, bio, photos, location, location_lat, location_lng,
     height_feet, height_inches, height_visible,
     religion, religion_visible,
+    ethnicity, ethnicity_visible,
     political_beliefs, political_beliefs_visible,
     prompts
   )
@@ -214,6 +217,8 @@ BEGIN
     COALESCE((NEW.raw_user_meta_data->>'height_visible')::BOOLEAN, TRUE),
     NEW.raw_user_meta_data->>'religion',
     COALESCE((NEW.raw_user_meta_data->>'religion_visible')::BOOLEAN, TRUE),
+    NEW.raw_user_meta_data->>'ethnicity',
+    COALESCE((NEW.raw_user_meta_data->>'ethnicity_visible')::BOOLEAN, TRUE),
     NEW.raw_user_meta_data->>'political_beliefs',
     COALESCE((NEW.raw_user_meta_data->>'political_beliefs_visible')::BOOLEAN, TRUE),
     COALESCE((NEW.raw_user_meta_data->'prompts')::JSONB, '[]'::JSONB)

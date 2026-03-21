@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../hooks/useProfile';
 import { INTERESTS } from '../lib/interests';
 import { PROMPT_OPTIONS, MAX_PROMPTS } from '../lib/prompts';
+import { ETHNICITY_OPTIONS, POLITICAL_BELIEF_OPTIONS, RELIGION_OPTIONS } from '../lib/profileOptions';
 import { generateCardId, migratePhotos, ensureCardIds } from '../lib/cardId';
 import LocationPicker from '../components/LocationPicker';
 
@@ -12,31 +13,6 @@ const GENDER_OPTIONS = [
   { value: 'female', label: 'Female' },
   { value: 'non-binary', label: 'Non-binary' },
   { value: 'other', label: 'Other' },
-];
-
-const RELIGION_OPTIONS = [
-  'Christianity',
-  'Islam',
-  'Judaism',
-  'Hinduism',
-  'Buddhism',
-  'Sikhism',
-  'Spiritual',
-  'Agnostic',
-  'Atheist',
-  'Other',
-  'Prefer not to say',
-];
-
-const POLITICAL_OPTIONS = [
-  'Liberal',
-  'Conservative',
-  'Moderate',
-  'Libertarian',
-  'Progressive',
-  'Apolitical',
-  'Other',
-  'Prefer not to say',
 ];
 
 export default function Profile() {
@@ -58,6 +34,8 @@ export default function Profile() {
   const [heightVisible, setHeightVisible] = useState(true);
   const [religion, setReligion] = useState('');
   const [religionVisible, setReligionVisible] = useState(true);
+  const [ethnicity, setEthnicity] = useState('');
+  const [ethnicityVisible, setEthnicityVisible] = useState(true);
   const [politicalBeliefs, setPoliticalBeliefs] = useState('');
   const [politicalBeliefsVisible, setPoliticalBeliefsVisible] = useState(true);
   const [prompts, setPrompts] = useState([]);
@@ -86,6 +64,8 @@ export default function Profile() {
       setHeightVisible(profile.height_visible !== false);
       setReligion(profile.religion || '');
       setReligionVisible(profile.religion_visible !== false);
+      setEthnicity(profile.ethnicity || '');
+      setEthnicityVisible(profile.ethnicity_visible !== false);
       setPoliticalBeliefs(profile.political_beliefs || '');
       setPoliticalBeliefsVisible(profile.political_beliefs_visible !== false);
       setPrompts(ensureCardIds(profile.prompts || []));
@@ -121,6 +101,8 @@ export default function Profile() {
       height_visible: heightVisible,
       religion: religion || null,
       religion_visible: religionVisible,
+      ethnicity: ethnicity || null,
+      ethnicity_visible: ethnicityVisible,
       political_beliefs: politicalBeliefs || null,
       political_beliefs_visible: politicalBeliefsVisible,
       prompts: prompts.length > 0 ? prompts : null,
@@ -398,6 +380,30 @@ export default function Profile() {
           </label>
         </section>
 
+        {/* Ethnicity */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-3">Ethnicity</h2>
+          <select
+            value={ethnicity}
+            onChange={(e) => setEthnicity(e.target.value)}
+            className="input-field mb-3"
+          >
+            <option value="">Select ethnicity</option>
+            {ETHNICITY_OPTIONS.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={ethnicityVisible}
+              onChange={(e) => setEthnicityVisible(e.target.checked)}
+              className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+            />
+            <span className="text-sm text-gray-600">Show ethnicity on my profile</span>
+          </label>
+        </section>
+
         {/* Political Beliefs */}
         <section className="mb-8">
           <h2 className="text-lg font-semibold mb-3">Political Beliefs</h2>
@@ -407,7 +413,7 @@ export default function Profile() {
             className="input-field mb-3"
           >
             <option value="">Select political leaning</option>
-            {POLITICAL_OPTIONS.map((option) => (
+            {POLITICAL_BELIEF_OPTIONS.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </select>

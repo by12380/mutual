@@ -69,6 +69,7 @@ export default function UserProfileCards({
   const hasDetails =
     (profile.height_feet && profile.height_visible !== false) ||
     (profile.religion && profile.religion_visible !== false) ||
+    (profile.ethnicity && profile.ethnicity_visible !== false) ||
     (profile.political_beliefs && profile.political_beliefs_visible !== false);
 
   const sectionLikesBadge = (sectionId) => {
@@ -208,6 +209,11 @@ export default function UserProfileCards({
               {profile.religion && profile.religion_visible !== false && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
                   {profile.religion}
+                </span>
+              )}
+              {profile.ethnicity && profile.ethnicity_visible !== false && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                  {profile.ethnicity}
                 </span>
               )}
               {profile.political_beliefs && profile.political_beliefs_visible !== false && (
