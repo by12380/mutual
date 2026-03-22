@@ -13,6 +13,7 @@ import { haversineDistance } from '../lib/geo';
  * @param {[number, number]|null} options.heightRange - [minInches, maxInches] filter (null = no filter)
  * @param {string[]|null} options.genders - Gender values to include (null = no filter)
  * @param {string[]|null} options.religions - Religion values to include (null = no filter)
+ * @param {string[]|null} options.ethnicities - Ethnicity values to include (null = no filter)
  * @param {string[]|null} options.politicalBeliefs - Political belief values to include (null = no filter)
  */
 export function useDiscovery({
@@ -21,6 +22,7 @@ export function useDiscovery({
   heightRange = null,
   genders = null,
   religions = null,
+  ethnicities = null,
   politicalBeliefs = null,
 } = {}) {
   const { user, profile: myProfile } = useAuth();
@@ -106,6 +108,10 @@ export function useDiscovery({
         results = results.filter((p) => p.religion != null && religions.includes(p.religion));
       }
 
+      if (ethnicities != null && ethnicities.length > 0) {
+        results = results.filter((p) => p.ethnicity != null && ethnicities.includes(p.ethnicity));
+      }
+
       if (politicalBeliefs != null && politicalBeliefs.length > 0) {
         results = results.filter(
           (p) => p.political_beliefs != null && politicalBeliefs.includes(p.political_beliefs),
@@ -133,6 +139,7 @@ export function useDiscovery({
     heightRange?.[1],
     genders?.join(','),
     religions?.join(','),
+    ethnicities?.join(','),
     politicalBeliefs?.join(','),
   ]);
 

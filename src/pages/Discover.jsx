@@ -9,6 +9,7 @@ import AgeFilter from '../components/discovery/AgeFilter';
 import HeightFilter from '../components/discovery/HeightFilter';
 import GenderFilter from '../components/discovery/GenderFilter';
 import ReligionFilter from '../components/discovery/ReligionFilter';
+import EthnicityFilter from '../components/discovery/EthnicityFilter';
 import PoliticalBeliefsFilter from '../components/discovery/PoliticalBeliefsFilter';
 
 export default function Discover() {
@@ -18,6 +19,7 @@ export default function Discover() {
   const [heightRange, setHeightRange] = useState(null);
   const [selectedGenders, setSelectedGenders] = useState(null);
   const [selectedReligions, setSelectedReligions] = useState(null);
+  const [selectedEthnicities, setSelectedEthnicities] = useState(null);
   const [selectedPoliticalBeliefs, setSelectedPoliticalBeliefs] = useState(null);
   const {
     currentProfile,
@@ -36,6 +38,7 @@ export default function Discover() {
     heightRange,
     genders: selectedGenders,
     religions: selectedReligions,
+    ethnicities: selectedEthnicities,
     politicalBeliefs: selectedPoliticalBeliefs,
   });
   const {
@@ -73,6 +76,7 @@ export default function Discover() {
     || heightRange != null
     || selectedGenders != null
     || selectedReligions != null
+    || selectedEthnicities != null
     || selectedPoliticalBeliefs != null
   );
 
@@ -119,6 +123,7 @@ export default function Discover() {
             <HeightFilter value={heightRange} onChange={setHeightRange} />
             <GenderFilter value={selectedGenders} onChange={setSelectedGenders} />
             <ReligionFilter value={selectedReligions} onChange={setSelectedReligions} />
+            <EthnicityFilter value={selectedEthnicities} onChange={setSelectedEthnicities} />
             <PoliticalBeliefsFilter
               value={selectedPoliticalBeliefs}
               onChange={setSelectedPoliticalBeliefs}
@@ -167,6 +172,7 @@ export default function Discover() {
           <HeightFilter value={heightRange} onChange={setHeightRange} />
           <GenderFilter value={selectedGenders} onChange={setSelectedGenders} />
           <ReligionFilter value={selectedReligions} onChange={setSelectedReligions} />
+          <EthnicityFilter value={selectedEthnicities} onChange={setSelectedEthnicities} />
           <PoliticalBeliefsFilter
             value={selectedPoliticalBeliefs}
             onChange={setSelectedPoliticalBeliefs}
