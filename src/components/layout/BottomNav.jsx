@@ -1,10 +1,13 @@
 import { NavLink } from 'react-router-dom';
+import { useUnreadMessages } from '../../hooks/useUnreadMessages';
 
 /**
  * Bottom navigation bar for mobile-first design
  * Shows Discover, Matches, and Profile tabs
  */
 export default function BottomNav() {
+  const unreadCount = useUnreadMessages();
+
   const navItems = [
     {
       to: '/discover',
@@ -58,14 +61,21 @@ export default function BottomNav() {
       to: '/messages',
       label: 'Messages',
       icon: (active) => (
-        <svg className="w-6 h-6" fill={active ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={active ? 0 : 2}
-            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-          />
-        </svg>
+        <div className="relative">
+          <svg className="w-6 h-6" fill={active ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={active ? 0 : 2}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+          {unreadCount > 0 && (
+            <span className="absolute -top-1.5 -right-2 min-w-[1rem] h-4 px-1 bg-primary-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold leading-none">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </div>
       ),
     },
     {
