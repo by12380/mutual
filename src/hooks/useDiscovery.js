@@ -3,6 +3,30 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { haversineDistance } from '../lib/geo';
 
+const SOFT_DISTANCE_BUFFER = 15;
+const SOFT_AGE_BUFFER = 2;
+const SOFT_HEIGHT_BUFFER = 2;
+const SOFT_MATCH_SCORE = 2;
+
+function addSoftScore(profiles, isMatch, score = SOFT_MATCH_SCORE) {
+  return profiles.map((profile) => ({
+    ...profile,
+    _softScore: profile._softScore + (isMatch(profile) ? score : 0),
+  }));
+}
+
+function compareProfiles(a, b) {
+  if (b._softScore !== a._softScore) {
+    return b._softScore - a._softScore;
+  }
+
+  if (a._distance != null && b._distance != null && a._distance !== b._distance) {
+    return a._distance - b._distance;
+  }
+
+  return a._originalIndex - b._originalIndex;
+}
+
 /**
  * Custom hook for the discovery/swipe feature
  * Handles fetching potential matches and recording swipes
@@ -15,6 +39,7 @@ import { haversineDistance } from '../lib/geo';
  * @param {string[]|null} options.religions - Religion values to include (null = no filter)
  * @param {string[]|null} options.ethnicities - Ethnicity values to include (null = no filter)
  * @param {string[]|null} options.politicalBeliefs - Political belief values to include (null = no filter)
+ * @param {Object} options.dealbreakers - Strictness flags for each filter
  */
 export function useDiscovery({
   maxDistance = null,
@@ -24,6 +49,7 @@ export function useDiscovery({
   religions = null,
   ethnicities = null,
   politicalBeliefs = null,
+  dealbreakers = {},
 } = {}) {
   const { user, profile: myProfile } = useAuth();
   const [profiles, setProfiles] = useState([]);
@@ -62,63 +88,131 @@ export function useDiscovery({
 
       if (fetchError) throw fetchError;
 
-      let results = profilesData || [];
+      let results = (profilesData || []).map((profile, index) => ({
+        ...profile,
+        _originalIndex: index,
+        _softScore: 0,
+      }));
 
       const myLat = myProfile?.location_lat;
       const myLng = myProfile?.location_lng;
 
+      if (myLat != null && myLng != null) {
+        results = results
+          .map((p) => ({
+            ...p,
+            _distance: haversineDistance(myLat, myLng, p.location_lat, p.location_lng),
+          }));
+      }
+
       if (maxDistance != null && myLat != null && myLng != null) {
-        results = results
-          .map((p) => ({
-            ...p,
-            _distance: haversineDistance(myLat, myLng, p.location_lat, p.location_lng),
-          }))
-          .filter((p) => p._distance <= maxDistance)
-          .sort((a, b) => a._distance - b._distance);
-      } else if (myLat != null && myLng != null) {
-        results = results
-          .map((p) => ({
-            ...p,
-            _distance: haversineDistance(myLat, myLng, p.location_lat, p.location_lng),
-          }))
-          .sort((a, b) => a._distance - b._distance);
+        const isWithinDistance = (profile) => profile._distance != null && profile._distance <= maxDistance;
+
+        if (dealbreakers.location) {
+          results = results.filter(isWithinDistance);
+        } else {
+          results = results.filter(
+            (profile) => profile._distance != null && profile._distance <= maxDistance + SOFT_DISTANCE_BUFFER,
+          );
+          results = addSoftScore(results, isWithinDistance);
+        }
       }
 
       if (ageRange != null) {
         const [minAge, maxAge] = ageRange;
-        results = results.filter(
-          (p) => p.age != null && p.age >= minAge && p.age <= maxAge,
+        const isWithinAgeRange = (profile) => (
+          profile.age != null
+          && profile.age >= minAge
+          && profile.age <= maxAge
         );
+
+        if (dealbreakers.age) {
+          results = results.filter(isWithinAgeRange);
+        } else {
+          results = results.filter(
+            (profile) => (
+              profile.age != null
+              && profile.age >= minAge - SOFT_AGE_BUFFER
+              && profile.age <= maxAge + SOFT_AGE_BUFFER
+            ),
+          );
+          results = addSoftScore(results, isWithinAgeRange);
+        }
       }
 
       if (heightRange != null) {
         const [minInches, maxInches] = heightRange;
-        results = results.filter((p) => {
-          if (p.height_feet == null) return false;
-          const totalInches = p.height_feet * 12 + (p.height_inches || 0);
+        const isWithinHeightRange = (profile) => {
+          if (profile.height_feet == null) return false;
+          const totalInches = profile.height_feet * 12 + (profile.height_inches || 0);
           return totalInches >= minInches && totalInches <= maxInches;
-        });
+        };
+
+        if (dealbreakers.height) {
+          results = results.filter(isWithinHeightRange);
+        } else {
+          results = results.filter((profile) => {
+            if (profile.height_feet == null) return false;
+            const totalInches = profile.height_feet * 12 + (profile.height_inches || 0);
+            return (
+              totalInches >= minInches - SOFT_HEIGHT_BUFFER
+              && totalInches <= maxInches + SOFT_HEIGHT_BUFFER
+            );
+          });
+          results = addSoftScore(results, isWithinHeightRange);
+        }
       }
 
       if (genders != null && genders.length > 0) {
-        results = results.filter((p) => p.gender != null && genders.includes(p.gender));
+        const matchesGender = (profile) => profile.gender != null && genders.includes(profile.gender);
+
+        if (dealbreakers.gender) {
+          results = results.filter(matchesGender);
+        } else {
+          results = addSoftScore(results, matchesGender);
+        }
       }
 
       if (religions != null && religions.length > 0) {
-        results = results.filter((p) => p.religion != null && religions.includes(p.religion));
+        const matchesReligion = (profile) => (
+          profile.religion != null && religions.includes(profile.religion)
+        );
+
+        if (dealbreakers.religion) {
+          results = results.filter(matchesReligion);
+        } else {
+          results = addSoftScore(results, matchesReligion);
+        }
       }
 
       if (ethnicities != null && ethnicities.length > 0) {
-        results = results.filter((p) => p.ethnicity != null && ethnicities.includes(p.ethnicity));
+        const matchesEthnicity = (profile) => (
+          profile.ethnicity != null && ethnicities.includes(profile.ethnicity)
+        );
+
+        if (dealbreakers.ethnicity) {
+          results = results.filter(matchesEthnicity);
+        } else {
+          results = addSoftScore(results, matchesEthnicity);
+        }
       }
 
       if (politicalBeliefs != null && politicalBeliefs.length > 0) {
-        results = results.filter(
-          (p) => p.political_beliefs != null && politicalBeliefs.includes(p.political_beliefs),
+        const matchesPoliticalBeliefs = (profile) => (
+          profile.political_beliefs != null
+          && politicalBeliefs.includes(profile.political_beliefs)
         );
+
+        if (dealbreakers.politicalBeliefs) {
+          results = results.filter(matchesPoliticalBeliefs);
+        } else {
+          results = addSoftScore(results, matchesPoliticalBeliefs);
+        }
       }
 
-      setProfiles(results);
+      results = results.sort(compareProfiles);
+
+      setProfiles(results.map(({ _softScore, _originalIndex, ...profile }) => profile));
       setCurrentIndex(0);
       setLikedSections({});
     } catch (err) {
@@ -141,6 +235,13 @@ export function useDiscovery({
     religions?.join(','),
     ethnicities?.join(','),
     politicalBeliefs?.join(','),
+    dealbreakers.location,
+    dealbreakers.age,
+    dealbreakers.height,
+    dealbreakers.gender,
+    dealbreakers.religion,
+    dealbreakers.ethnicity,
+    dealbreakers.politicalBeliefs,
   ]);
 
   // Fetch profiles on mount and when filters change

@@ -21,6 +21,21 @@ export default function Discover() {
   const [selectedReligions, setSelectedReligions] = useState(null);
   const [selectedEthnicities, setSelectedEthnicities] = useState(null);
   const [selectedPoliticalBeliefs, setSelectedPoliticalBeliefs] = useState(null);
+  const [dealbreakers, setDealbreakers] = useState({
+    location: false,
+    age: false,
+    height: false,
+    gender: false,
+    religion: false,
+    ethnicity: false,
+    politicalBeliefs: false,
+  });
+  const setDealbreaker = (key, value) => {
+    setDealbreakers((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
   const {
     currentProfile,
     hasMore,
@@ -40,6 +55,7 @@ export default function Discover() {
     religions: selectedReligions,
     ethnicities: selectedEthnicities,
     politicalBeliefs: selectedPoliticalBeliefs,
+    dealbreakers,
   });
   const {
     commentsBySection,
@@ -118,15 +134,44 @@ export default function Discover() {
               value={maxDistance}
               onChange={setMaxDistance}
               hasLocation={!!(myProfile?.location_lat && myProfile?.location_lng)}
+              dealbreaker={dealbreakers.location}
+              onDealbreakerChange={(value) => setDealbreaker('location', value)}
             />
-            <AgeFilter value={ageRange} onChange={setAgeRange} />
-            <HeightFilter value={heightRange} onChange={setHeightRange} />
-            <GenderFilter value={selectedGenders} onChange={setSelectedGenders} />
-            <ReligionFilter value={selectedReligions} onChange={setSelectedReligions} />
-            <EthnicityFilter value={selectedEthnicities} onChange={setSelectedEthnicities} />
+            <AgeFilter
+              value={ageRange}
+              onChange={setAgeRange}
+              dealbreaker={dealbreakers.age}
+              onDealbreakerChange={(value) => setDealbreaker('age', value)}
+            />
+            <HeightFilter
+              value={heightRange}
+              onChange={setHeightRange}
+              dealbreaker={dealbreakers.height}
+              onDealbreakerChange={(value) => setDealbreaker('height', value)}
+            />
+            <GenderFilter
+              value={selectedGenders}
+              onChange={setSelectedGenders}
+              dealbreaker={dealbreakers.gender}
+              onDealbreakerChange={(value) => setDealbreaker('gender', value)}
+            />
+            <ReligionFilter
+              value={selectedReligions}
+              onChange={setSelectedReligions}
+              dealbreaker={dealbreakers.religion}
+              onDealbreakerChange={(value) => setDealbreaker('religion', value)}
+            />
+            <EthnicityFilter
+              value={selectedEthnicities}
+              onChange={setSelectedEthnicities}
+              dealbreaker={dealbreakers.ethnicity}
+              onDealbreakerChange={(value) => setDealbreaker('ethnicity', value)}
+            />
             <PoliticalBeliefsFilter
               value={selectedPoliticalBeliefs}
               onChange={setSelectedPoliticalBeliefs}
+              dealbreaker={dealbreakers.politicalBeliefs}
+              onDealbreakerChange={(value) => setDealbreaker('politicalBeliefs', value)}
             />
           </div>
         </div>
@@ -167,15 +212,44 @@ export default function Discover() {
             value={maxDistance}
             onChange={setMaxDistance}
             hasLocation={!!(myProfile?.location_lat && myProfile?.location_lng)}
+            dealbreaker={dealbreakers.location}
+            onDealbreakerChange={(value) => setDealbreaker('location', value)}
           />
-          <AgeFilter value={ageRange} onChange={setAgeRange} />
-          <HeightFilter value={heightRange} onChange={setHeightRange} />
-          <GenderFilter value={selectedGenders} onChange={setSelectedGenders} />
-          <ReligionFilter value={selectedReligions} onChange={setSelectedReligions} />
-          <EthnicityFilter value={selectedEthnicities} onChange={setSelectedEthnicities} />
+          <AgeFilter
+            value={ageRange}
+            onChange={setAgeRange}
+            dealbreaker={dealbreakers.age}
+            onDealbreakerChange={(value) => setDealbreaker('age', value)}
+          />
+          <HeightFilter
+            value={heightRange}
+            onChange={setHeightRange}
+            dealbreaker={dealbreakers.height}
+            onDealbreakerChange={(value) => setDealbreaker('height', value)}
+          />
+          <GenderFilter
+            value={selectedGenders}
+            onChange={setSelectedGenders}
+            dealbreaker={dealbreakers.gender}
+            onDealbreakerChange={(value) => setDealbreaker('gender', value)}
+          />
+          <ReligionFilter
+            value={selectedReligions}
+            onChange={setSelectedReligions}
+            dealbreaker={dealbreakers.religion}
+            onDealbreakerChange={(value) => setDealbreaker('religion', value)}
+          />
+          <EthnicityFilter
+            value={selectedEthnicities}
+            onChange={setSelectedEthnicities}
+            dealbreaker={dealbreakers.ethnicity}
+            onDealbreakerChange={(value) => setDealbreaker('ethnicity', value)}
+          />
           <PoliticalBeliefsFilter
             value={selectedPoliticalBeliefs}
             onChange={setSelectedPoliticalBeliefs}
+            dealbreaker={dealbreakers.politicalBeliefs}
+            onDealbreakerChange={(value) => setDealbreaker('politicalBeliefs', value)}
           />
         </div>
       </div>

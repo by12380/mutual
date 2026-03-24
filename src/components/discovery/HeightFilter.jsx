@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useAnchoredPopover } from '../../hooks/useAnchoredPopover';
+import DealbreakerToggle from './DealbreakerToggle';
 
 const MIN_INCHES = 48;  // 4'0"
 const MAX_INCHES = 84;  // 7'0"
@@ -17,11 +18,14 @@ function inchesToLabel(totalInches) {
  * Props:
  * - value: [number, number] | null  (current [minInches, maxInches], null = off)
  * - onChange: (range: [number, number] | null) => void
+ * - dealbreaker: boolean
+ * - onDealbreakerChange: (value: boolean) => void
  */
-export default function HeightFilter({ value, onChange }) {
+export default function HeightFilter({ value, onChange, dealbreaker = false, onDealbreakerChange }) {
   const [open, setOpen] = useState(false);
   const [localMin, setLocalMin] = useState(value?.[0] ?? MIN_INCHES);
   const [localMax, setLocalMax] = useState(value?.[1] ?? MAX_INCHES);
+  const [localDealbreaker, setLocalDealbreaker] = useState(dealbreaker);
   const containerRef = useRef(null);
   const { anchorRef, popoverRef, popoverStyle } = useAnchoredPopover(open, { width: 256 });
 
@@ -29,6 +33,10 @@ export default function HeightFilter({ value, onChange }) {
     setLocalMin(value?.[0] ?? MIN_INCHES);
     setLocalMax(value?.[1] ?? MAX_INCHES);
   }, [value]);
+
+  useEffect(() => {
+    setLocalDealbreaker(dealbreaker);
+  }, [dealbreaker]);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -48,16 +56,20 @@ export default function HeightFilter({ value, onChange }) {
   const handleApply = () => {
     if (localMin === MIN_INCHES && localMax === MAX_INCHES) {
       onChange(null);
+      onDealbreakerChange(false);
     } else {
       onChange([localMin, localMax]);
+      onDealbreakerChange(localDealbreaker);
     }
     setOpen(false);
   };
 
   const handleClear = () => {
     onChange(null);
+    onDealbreakerChange(false);
     setLocalMin(MIN_INCHES);
     setLocalMax(MAX_INCHES);
+    setLocalDealbreaker(false);
     setOpen(false);
   };
 
@@ -118,6 +130,11 @@ export default function HeightFilter({ value, onChange }) {
               onChangeMax={setLocalMax}
             />
           </div>
+
+          <DealbreakerToggle
+            checked={localDealbreaker}
+            onChange={setLocalDealbreaker}
+          />
 
           <div className="border-t border-gray-100 px-3 py-2.5 flex items-center justify-between gap-2">
             {active ? (

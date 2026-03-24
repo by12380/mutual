@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAnchoredPopover } from '../../hooks/useAnchoredPopover';
+import DealbreakerToggle from './DealbreakerToggle';
 
 const GENDER_OPTIONS = [
   { value: 'male', label: 'Male' },
@@ -8,15 +9,20 @@ const GENDER_OPTIONS = [
   { value: 'non-binary', label: 'Non-binary' },
 ];
 
-export default function GenderFilter({ value, onChange }) {
+export default function GenderFilter({ value, onChange, dealbreaker = false, onDealbreakerChange }) {
   const [open, setOpen] = useState(false);
   const [localValue, setLocalValue] = useState(value ?? []);
+  const [localDealbreaker, setLocalDealbreaker] = useState(dealbreaker);
   const containerRef = useRef(null);
   const { anchorRef, popoverRef, popoverStyle } = useAnchoredPopover(open, { width: 256 });
 
   useEffect(() => {
     setLocalValue(value ?? []);
   }, [value]);
+
+  useEffect(() => {
+    setLocalDealbreaker(dealbreaker);
+  }, [dealbreaker]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -59,13 +65,17 @@ export default function GenderFilter({ value, onChange }) {
   };
 
   const handleApply = () => {
-    onChange(localValue.length > 0 ? localValue : null);
+    const nextValue = localValue.length > 0 ? localValue : null;
+    onChange(nextValue);
+    onDealbreakerChange(nextValue ? localDealbreaker : false);
     setOpen(false);
   };
 
   const handleClear = () => {
     setLocalValue([]);
     onChange(null);
+    onDealbreakerChange(false);
+    setLocalDealbreaker(false);
     setOpen(false);
   };
 
@@ -135,6 +145,11 @@ export default function GenderFilter({ value, onChange }) {
               );
             })}
           </div>
+
+          <DealbreakerToggle
+            checked={localDealbreaker}
+            onChange={setLocalDealbreaker}
+          />
 
           <div className="border-t border-gray-100 px-3 py-2.5 flex items-center justify-between gap-2">
             {active ? (

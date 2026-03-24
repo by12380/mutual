@@ -2,16 +2,22 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAnchoredPopover } from '../../hooks/useAnchoredPopover';
 import { RELIGION_OPTIONS } from '../../lib/profileOptions';
+import DealbreakerToggle from './DealbreakerToggle';
 
-export default function ReligionFilter({ value, onChange }) {
+export default function ReligionFilter({ value, onChange, dealbreaker = false, onDealbreakerChange }) {
   const [open, setOpen] = useState(false);
   const [localValue, setLocalValue] = useState(value ?? []);
+  const [localDealbreaker, setLocalDealbreaker] = useState(dealbreaker);
   const containerRef = useRef(null);
   const { anchorRef, popoverRef, popoverStyle } = useAnchoredPopover(open, { width: 256 });
 
   useEffect(() => {
     setLocalValue(value ?? []);
   }, [value]);
+
+  useEffect(() => {
+    setLocalDealbreaker(dealbreaker);
+  }, [dealbreaker]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -50,13 +56,17 @@ export default function ReligionFilter({ value, onChange }) {
   };
 
   const handleApply = () => {
-    onChange(localValue.length > 0 ? localValue : null);
+    const nextValue = localValue.length > 0 ? localValue : null;
+    onChange(nextValue);
+    onDealbreakerChange(nextValue ? localDealbreaker : false);
     setOpen(false);
   };
 
   const handleClear = () => {
     setLocalValue([]);
     onChange(null);
+    onDealbreakerChange(false);
+    setLocalDealbreaker(false);
     setOpen(false);
   };
 
@@ -126,6 +136,11 @@ export default function ReligionFilter({ value, onChange }) {
               );
             })}
           </div>
+
+          <DealbreakerToggle
+            checked={localDealbreaker}
+            onChange={setLocalDealbreaker}
+          />
 
           <div className="border-t border-gray-100 px-3 py-2.5 flex items-center justify-between gap-2">
             {active ? (

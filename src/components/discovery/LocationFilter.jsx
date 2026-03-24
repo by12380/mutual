@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAnchoredPopover } from '../../hooks/useAnchoredPopover';
+import DealbreakerToggle from './DealbreakerToggle';
 
 const DISTANCE_OPTIONS = [5, 10, 25, 50, 100, 250];
 
@@ -11,11 +12,29 @@ const DISTANCE_OPTIONS = [5, 10, 25, 50, 100, 250];
  * - value: number | null  (current max distance in miles, null = off)
  * - onChange: (miles: number | null) => void
  * - hasLocation: boolean  (whether the current user has a location set)
+ * - dealbreaker: boolean
+ * - onDealbreakerChange: (value: boolean) => void
  */
-export default function LocationFilter({ value, onChange, hasLocation }) {
+export default function LocationFilter({
+  value,
+  onChange,
+  hasLocation,
+  dealbreaker = false,
+  onDealbreakerChange,
+}) {
   const [open, setOpen] = useState(false);
+  const [localValue, setLocalValue] = useState(value);
+  const [localDealbreaker, setLocalDealbreaker] = useState(dealbreaker);
   const containerRef = useRef(null);
   const { anchorRef, popoverRef, popoverStyle } = useAnchoredPopover(open, { width: 224 });
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    setLocalDealbreaker(dealbreaker);
+  }, [dealbreaker]);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -33,6 +52,20 @@ export default function LocationFilter({ value, onChange, hasLocation }) {
   }, [open]);
 
   const active = value != null;
+
+  const handleApply = () => {
+    onChange(localValue ?? null);
+    onDealbreakerChange(localValue != null ? localDealbreaker : false);
+    setOpen(false);
+  };
+
+  const handleClear = () => {
+    setLocalValue(null);
+    setLocalDealbreaker(false);
+    onChange(null);
+    onDealbreakerChange(false);
+    setOpen(false);
+  };
 
   return (
     <div className="relative inline-block flex-shrink-0" ref={containerRef}>
@@ -102,12 +135,9 @@ export default function LocationFilter({ value, onChange, hasLocation }) {
                   <button
                     key={miles}
                     type="button"
-                    onClick={() => {
-                      onChange(miles);
-                      setOpen(false);
-                    }}
+                    onClick={() => setLocalValue(miles)}
                     className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                      value === miles
+                      localValue === miles
                         ? 'bg-primary-50 text-primary-700 font-medium'
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
@@ -116,20 +146,30 @@ export default function LocationFilter({ value, onChange, hasLocation }) {
                   </button>
                 ))}
               </div>
-              {active && (
-                <div className="border-t border-gray-100 px-1.5 py-1.5">
+              <DealbreakerToggle
+                checked={localDealbreaker}
+                onChange={setLocalDealbreaker}
+              />
+              <div className="border-t border-gray-100 px-3 py-2.5 flex items-center justify-between gap-2">
+                {active ? (
                   <button
                     type="button"
-                    onClick={() => {
-                      onChange(null);
-                      setOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors"
+                    onClick={handleClear}
+                    className="text-sm text-red-500 hover:text-red-600 transition-colors"
                   >
-                    Clear filter
+                    Clear
                   </button>
-                </div>
-              )}
+                ) : (
+                  <span />
+                )}
+                <button
+                  type="button"
+                  onClick={handleApply}
+                  className="px-4 py-1.5 rounded-lg text-sm font-medium bg-primary-500 text-white hover:bg-primary-600 transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
             </>
           )}
         </div>,

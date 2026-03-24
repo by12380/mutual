@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useAnchoredPopover } from '../../hooks/useAnchoredPopover';
+import DealbreakerToggle from './DealbreakerToggle';
 
 const MIN_AGE = 18;
 const MAX_AGE = 65;
@@ -11,11 +12,14 @@ const MAX_AGE = 65;
  * Props:
  * - value: [number, number] | null  (current [minAge, maxAge], null = off)
  * - onChange: (range: [number, number] | null) => void
+ * - dealbreaker: boolean
+ * - onDealbreakerChange: (value: boolean) => void
  */
-export default function AgeFilter({ value, onChange }) {
+export default function AgeFilter({ value, onChange, dealbreaker = false, onDealbreakerChange }) {
   const [open, setOpen] = useState(false);
   const [localMin, setLocalMin] = useState(value?.[0] ?? MIN_AGE);
   const [localMax, setLocalMax] = useState(value?.[1] ?? MAX_AGE);
+  const [localDealbreaker, setLocalDealbreaker] = useState(dealbreaker);
   const containerRef = useRef(null);
   const { anchorRef, popoverRef, popoverStyle } = useAnchoredPopover(open, { width: 256 });
 
@@ -23,6 +27,10 @@ export default function AgeFilter({ value, onChange }) {
     setLocalMin(value?.[0] ?? MIN_AGE);
     setLocalMax(value?.[1] ?? MAX_AGE);
   }, [value]);
+
+  useEffect(() => {
+    setLocalDealbreaker(dealbreaker);
+  }, [dealbreaker]);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -42,16 +50,20 @@ export default function AgeFilter({ value, onChange }) {
   const handleApply = () => {
     if (localMin === MIN_AGE && localMax === MAX_AGE) {
       onChange(null);
+      onDealbreakerChange(false);
     } else {
       onChange([localMin, localMax]);
+      onDealbreakerChange(localDealbreaker);
     }
     setOpen(false);
   };
 
   const handleClear = () => {
     onChange(null);
+    onDealbreakerChange(false);
     setLocalMin(MIN_AGE);
     setLocalMax(MAX_AGE);
+    setLocalDealbreaker(false);
     setOpen(false);
   };
 
@@ -115,6 +127,11 @@ export default function AgeFilter({ value, onChange }) {
               onChangeMax={setLocalMax}
             />
           </div>
+
+          <DealbreakerToggle
+            checked={localDealbreaker}
+            onChange={setLocalDealbreaker}
+          />
 
           <div className="border-t border-gray-100 px-3 py-2.5 flex items-center justify-between gap-2">
             {active ? (
