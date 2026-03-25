@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { useCardComments } from '../hooks/useCardComments';
 import { getDisplayName } from '../lib/displayName';
 import { firstPhotoUrl } from '../lib/cardId';
@@ -24,6 +25,7 @@ const formatLikeDate = (dateString) => {
 export default function ProfileView() {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [profileLikes, setProfileLikes] = useState([]);
   const [cardLikes, setCardLikes] = useState([]);
   const [likesLoading, setLikesLoading] = useState(true);
@@ -103,7 +105,10 @@ export default function ProfileView() {
   });
 
   const handleSignOut = async () => {
-    await signOut();
+    const { error } = await signOut();
+    if (error) {
+      toast.error('Failed to sign out');
+    }
   };
 
   if (!profile) {

@@ -1,16 +1,17 @@
 import { useNavigate } from 'react-router-dom';
 import { useMatches } from '../hooks/useMatches';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { getDisplayName } from '../lib/displayName';
 import { firstPhotoUrl } from '../lib/cardId';
 
 export default function Matches() {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const toast = useToast();
   const { matches, loading, error, activateMatch, activeMatchId } = useMatches();
 
   const handleMatchClick = async (match) => {
-    // If this match is not active and user has another active match, show warning
     if (activeMatchId && activeMatchId !== match.id && match.status !== 'active') {
       const confirmed = window.confirm(
         'You can only chat with one person at a time. Starting this conversation will pause your current one. Continue?'
@@ -18,9 +19,13 @@ export default function Matches() {
       if (!confirmed) return;
     }
 
-    // Activate this match if not already active
     if (match.status !== 'active') {
-      await activateMatch(match.id);
+      const result = await activateMatch(match.id);
+      if (result?.error) {
+        toast.error('Failed to start conversation');
+        return;
+      }
+      toast.success('Conversation started!');
     }
 
     navigate(`/chat/${match.id}`);

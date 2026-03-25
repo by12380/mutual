@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { useProfile } from '../hooks/useProfile';
 import { INTERESTS } from '../lib/interests';
 import { PROMPT_OPTIONS, MAX_PROMPTS } from '../lib/prompts';
@@ -19,6 +20,7 @@ export default function Profile() {
   const { profile } = useAuth();
   const { updateProfile, uploadPhoto, addPhoto, removePhoto, loading } = useProfile();
   const navigate = useNavigate();
+  const toast = useToast();
   const fileInputRef = useRef(null);
 
   // Form state
@@ -45,7 +47,6 @@ export default function Profile() {
   const [promptSearch, setPromptSearch] = useState('');
   const [editingPromptIndex, setEditingPromptIndex] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
 
   // Initialize form with profile data
   useEffect(() => {
@@ -83,7 +84,6 @@ export default function Profile() {
 
   const handleSave = async () => {
     setSaving(true);
-    setMessage({ type: '', text: '' });
 
     const updates = {
       first_name: firstName.trim(),
@@ -111,9 +111,9 @@ export default function Profile() {
     const { error } = await updateProfile(updates);
 
     if (error) {
-      setMessage({ type: 'error', text: error.message || 'Failed to save profile' });
+      toast.error(error.message || 'Failed to save profile');
     } else {
-      setMessage({ type: 'success', text: 'Profile saved successfully!' });
+      toast.success('Profile saved successfully!');
     }
 
     setSaving(false);
@@ -123,40 +123,37 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
-      setMessage({ type: 'error', text: 'Please select an image file' });
+      toast.error('Please select an image file');
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setMessage({ type: 'error', text: 'Image must be less than 5MB' });
+      toast.error('Image must be less than 5MB');
       return;
     }
 
-    setMessage({ type: '', text: '' });
     const { url, error: uploadError } = await uploadPhoto(file);
 
     if (uploadError) {
-      setMessage({ type: 'error', text: uploadError.message });
+      toast.error(uploadError.message);
       return;
     }
 
     const { error: addError } = await addPhoto(url);
     if (addError) {
-      setMessage({ type: 'error', text: addError.message });
+      toast.error(addError.message);
       return;
     }
 
     setPhotos([...photos, { id: generateCardId(), url }]);
-    setMessage({ type: 'success', text: 'Photo uploaded!' });
+    toast.success('Photo uploaded!');
   };
 
   const handleRemovePhoto = async (photoUrl) => {
     const { error } = await removePhoto(photoUrl);
     if (error) {
-      setMessage({ type: 'error', text: error.message });
+      toast.error(error.message);
       return;
     }
     setPhotos(photos.filter(p => p.url !== photoUrl));
@@ -186,19 +183,6 @@ export default function Profile() {
           </button>
           <h1 className="text-2xl font-bold">Edit Profile</h1>
         </div>
-
-        {/* Status Message */}
-        {message.text && (
-          <div
-            className={`px-4 py-3 rounded-lg mb-4 ${
-              message.type === 'error'
-                ? 'bg-red-50 text-red-600'
-                : 'bg-green-50 text-green-600'
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
 
         {/* Photos Section */}
         <section className="mb-8">

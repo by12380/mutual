@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useChat } from '../hooks/useChat';
 import { useMatches } from '../hooks/useMatches';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { getDisplayName } from '../lib/displayName';
 import { firstPhotoUrl } from '../lib/cardId';
 
@@ -10,6 +11,7 @@ export default function Chat() {
   const { matchId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const toast = useToast();
   const { messages, match, otherUser, loading, error, sending, sendMessage, canSendMessage } = useChat(matchId);
   const { endMatch } = useMatches();
   
@@ -37,9 +39,8 @@ export default function Chat() {
     const { error: sendError } = await sendMessage(messageContent);
     
     if (sendError) {
-      // Restore message if send failed
       setNewMessage(messageContent);
-      alert(sendError.message);
+      toast.error(sendError.message || 'Failed to send message');
     }
   };
 
@@ -49,7 +50,12 @@ export default function Chat() {
     );
     if (!confirmed) return;
 
-    await endMatch(matchId);
+    const result = await endMatch(matchId);
+    if (result?.error) {
+      toast.error('Failed to end conversation');
+      return;
+    }
+    toast.info('Conversation ended');
     navigate('/matches');
   };
 

@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useMatches } from '../hooks/useMatches';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 import { getDisplayName } from '../lib/displayName';
 import { firstPhotoUrl } from '../lib/cardId';
 
 export default function Messages() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const toast = useToast();
   const { matches, loading, error, activateMatch, activeMatchId } = useMatches();
 
   const handleConversationClick = async (match) => {
@@ -18,7 +20,11 @@ export default function Messages() {
     }
 
     if (match.status !== 'active') {
-      await activateMatch(match.id);
+      const result = await activateMatch(match.id);
+      if (result?.error) {
+        toast.error('Failed to start conversation');
+        return;
+      }
     }
 
     navigate(`/chat/${match.id}`);
