@@ -126,6 +126,22 @@ body {
   display: none;
 }
 
+/* Keep horizontal rails clean on mobile, but scrollable on larger screens */
+.scrollbar-hide-mobile {
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .scrollbar-hide-mobile {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide-mobile::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Animation keyframes */
 @keyframes fadeIn {
   from { opacity: 0; }

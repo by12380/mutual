@@ -128,7 +128,7 @@ export default function Discover() {
         <div className="px-4 pt-4 pb-2 flex items-center justify-between">
           <h1 className="text-lg font-bold text-gray-900">Discover</h1>
         </div>
-        <div className="px-4 pb-2 overflow-x-auto scrollbar-hide">
+        <div className="px-4 pb-2 overflow-x-auto scrollbar-hide-mobile">
           <div className="flex w-max min-w-full flex-nowrap items-center gap-2">
             <LocationFilter
               value={maxDistance}
@@ -206,7 +206,7 @@ export default function Discover() {
       </div>
 
       {/* Filters */}
-      <div className="px-4 pb-2 overflow-x-auto scrollbar-hide">
+      <div className="px-4 pb-2 overflow-x-auto scrollbar-hide-mobile">
         <div className="flex w-max min-w-full flex-nowrap items-center gap-2">
           <LocationFilter
             value={maxDistance}
