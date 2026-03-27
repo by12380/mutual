@@ -12,6 +12,16 @@ import ReligionFilter from '../components/discovery/ReligionFilter';
 import EthnicityFilter from '../components/discovery/EthnicityFilter';
 import PoliticalBeliefsFilter from '../components/discovery/PoliticalBeliefsFilter';
 
+const DEFAULT_DEALBREAKERS = {
+  location: false,
+  age: false,
+  height: false,
+  gender: false,
+  religion: false,
+  ethnicity: false,
+  politicalBeliefs: false,
+};
+
 export default function Discover() {
   const { user, profile: myProfile } = useAuth();
   const [maxDistance, setMaxDistance] = useState(null);
@@ -21,15 +31,7 @@ export default function Discover() {
   const [selectedReligions, setSelectedReligions] = useState(null);
   const [selectedEthnicities, setSelectedEthnicities] = useState(null);
   const [selectedPoliticalBeliefs, setSelectedPoliticalBeliefs] = useState(null);
-  const [dealbreakers, setDealbreakers] = useState({
-    location: false,
-    age: false,
-    height: false,
-    gender: false,
-    religion: false,
-    ethnicity: false,
-    politicalBeliefs: false,
-  });
+  const [dealbreakers, setDealbreakers] = useState(DEFAULT_DEALBREAKERS);
   const setDealbreaker = (key, value) => {
     setDealbreakers((prev) => ({
       ...prev,
@@ -86,6 +88,17 @@ export default function Discover() {
     setMatchId(null);
   };
 
+  const clearAllFilters = () => {
+    setMaxDistance(null);
+    setAgeRange(null);
+    setHeightRange(null);
+    setSelectedGenders(null);
+    setSelectedReligions(null);
+    setSelectedEthnicities(null);
+    setSelectedPoliticalBeliefs(null);
+    setDealbreakers(DEFAULT_DEALBREAKERS);
+  };
+
   const hasActiveFilters = (
     maxDistance != null
     || ageRange != null
@@ -130,6 +143,18 @@ export default function Discover() {
         </div>
         <div className="px-4 pb-2 overflow-x-auto scrollbar-hide-mobile">
           <div className="flex w-max min-w-full flex-nowrap items-center gap-2">
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              disabled={!hasActiveFilters}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition-colors hover:border-primary-200 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Clear all filters"
+              title="Clear all filters"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12M18 6l-12 12" />
+              </svg>
+            </button>
             <LocationFilter
               value={maxDistance}
               onChange={setMaxDistance}
@@ -208,6 +233,18 @@ export default function Discover() {
       {/* Filters */}
       <div className="px-4 pb-2 overflow-x-auto scrollbar-hide-mobile">
         <div className="flex w-max min-w-full flex-nowrap items-center gap-2">
+          <button
+            type="button"
+            onClick={clearAllFilters}
+            disabled={!hasActiveFilters}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 transition-colors hover:border-primary-200 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Clear all filters"
+            title="Clear all filters"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12M18 6l-12 12" />
+            </svg>
+          </button>
           <LocationFilter
             value={maxDistance}
             onChange={setMaxDistance}
